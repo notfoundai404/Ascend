@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  --color-rplay-green: #1B3A8C;
+  --color-rplay-dark: #0B0F1E;
+  --color-rplay-gray: #0F1528;
+  --color-rplay-light-gray: #162040;
+  --font-sans: "Outfit", sans-serif;
+  --font-display: "Racing Sans One", sans-serif;
+  --font-condensed: "League Gothic", sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-rplay-dark);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    overflow-x: hidden;
+  }
+}
+
+/* ========================
+   Scroll progress indicator
+   ======================== */
+@property --scroll-progress {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: var(--scroll-progress);
+  background: var(--color-rplay-green);
+  z-index: 100;
+  pointer-events: none;
+  transition: width 0.1s ease;
+}
+
+/* ========================
+   Custom animations
+   ======================== */
+
+/* Floating / bob animation for hero elements */
+@keyframes bob {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-bob {
+  animation: bob 3s ease-in-out infinite;
+}
+
+/* Gentle pulse glow */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(27, 58, 140, 0.3); }
+  50% { box-shadow: 0 0 35px rgba(27, 58, 140, 0.7); }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2.5s ease-in-out infinite;
+}
+
+/* Shimmer sweep for loading states */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.02) 0%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.02) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Clip-path wipe reveal */
+@keyframes wipe-in-right {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0% 0 0); }
+}
+
+.wipe-in {
+  animation: wipe-in-right 0.8s cubic-bezier(0.77, 0, 0.18, 1) forwards;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-rplay-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-rplay-green);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a4fb5;
+}
+
+/* Ensure backdrop-blur works on all browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .backdrop-blur-sm { background: rgba(0, 0, 0, 0.9); }
+}
