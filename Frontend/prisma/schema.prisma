@@ -1,0 +1,285 @@
+// ============================================================
+// PRISMA SCHEMA — ASCEND CRICKET ACADEMY
+// Database: SQLite (local dev) / swap to PostgreSQL for production
+// To use: run `npx prisma migrate dev --name init`
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USER (Auth entity — one per login account)
+// ============================================================
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   // "ADMIN" | "COACH" | "STUDENT"
+  isFirstLogin Boolean  @default(true)
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student Student?
+  coach   Coach?
+  admin   Admin?
+}
+
+// ============================================================
+// AUTO-INCREMENT COUNTER FOR STUDENT IDs (ASC-001, ASC-002…)
+// ============================================================
+model IdCounter {
+  id      String @id @default("student_counter")
+  current Int    @default(0)
+}
+
+// ============================================================
+// STUDENT
+// ============================================================
+model Student {
+  id                 String   @id @default(cuid())
+  studentId          String   @unique  // ASC-001, immutable
+  fullName           String
+  phone              String
+  email              String   @unique
+  dob                String?
+  fatherName         String?
+  motherName         String?
+  fatherPhone        String?
+  motherPhone        String?
+  fatherEmail        String?
+  motherEmail        String?
+  emergencyPhone     String?
+  address            String?
+  bloodGroup         String?  // A+, A-, B+, B-, AB+, AB-, O+, O-
+  cricketRole        String?  // Batsman | Bowler | All-rounder | Wicketkeeper
+  batch              String?
+  joiningDate        String?
+  uniformSize        String?  // S | M | L | XL | XXL
+  totalFees          Float    @default(0)
+  uniformFees        Float    @default(0)
+  installmentsLimit  Int      @default(3)
+  amountPaidTillDate Float    @default(0)
+
+  primaryCoachId     String?
+  coach              Coach?   @relation(fields: [primaryCoachId], references: [id])
+
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions       Transaction[]
+  attendances        Attendance[]
+  reviews            StudentReview[]
+  feedbacks          Feedback[]
+  achievements       Achievement[]
+  noticeStudents     NoticeStudent[]
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// ============================================================
+// COACH
+// ============================================================
+model Coach {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String?
+  email       String   @unique
+  specialty   String?
+  experience  String?
+  rating      Float    @default(0)
+  avatarUrl   String?
+
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  students        Student[]
+  coachAttendance CoachAttendance[]
+  noticeCoaches   NoticeCoach[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+model Admin {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// ============================================================
+// TRANSACTION / FEE PAYMENT
+// ============================================================
+model Transaction {
+  id                  String    @id @default(cuid())
+  studentId           String
+  student             Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feesFor             String?
+  amount              Float
+  amountPaidTillDate  Float     @default(0)
+  remainingAmount     Float     @default(0)
+  type                String    // "academy_fees" | "uniform_fees"
+  mode                String    // "UPI" | "Cash" | "Bank_Transfer"
+  utrNumber           String?
+  proofUrl            String?
+  status              String    @default("Pending") // "Pending" | "Approved" | "Rejected"
+  transactionDatetime DateTime?
+  verifiedBy          String?   // Admin userId
+  verifiedAt          DateTime?
+  installmentNumber   Int       @default(1)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+// ============================================================
+// NOTICE
+// ============================================================
+model Notice {
+  id             String          @id @default(cuid())
+  title          String
+  content        String
+  category       String          // "urgent" | "general" | "event"
+  visibility     String          @default("ALL") // "ALL" | "SELECTED_STUDENTS" | "SELECTED_COACHES"
+  createdBy      String          // userId of creator
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  noticeStudents NoticeStudent[]
+  noticeCoaches  NoticeCoach[]
+}
+
+model NoticeStudent {
+  noticeId  String
+  studentId String
+  notice    Notice  @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([noticeId, studentId])
+}
+
+model NoticeCoach {
+  noticeId String
+  coachId  String
+  notice   Notice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  coach    Coach  @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@id([noticeId, coachId])
+}
+
+// ============================================================
+// CALENDAR EVENT
+// ============================================================
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  category    String   // "match" | "practice" | "holiday" | "fee_deadline"
+  eventDate   DateTime
+  createdBy   String   // userId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendances Attendance[]
+}
+
+// ============================================================
+// STUDENT ATTENDANCE
+// ============================================================
+model Attendance {
+  id        String        @id @default(cuid())
+  date      DateTime
+  isPresent Boolean       @default(false)
+  notes     String?
+
+  studentId String
+  student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  eventId   String?
+  event     CalendarEvent? @relation(fields: [eventId], references: [id])
+
+  markedBy  String        // userId of coach or admin who marked
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([date, studentId])
+}
+
+// ============================================================
+// COACH ATTENDANCE (Admin marks coach attendance)
+// ============================================================
+model CoachAttendance {
+  id        String   @id @default(cuid())
+  date      DateTime
+  isPresent Boolean  @default(false)
+  notes     String?
+
+  coachId   String
+  coach     Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  markedBy  String   // Admin userId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([date, coachId])
+}
+
+// ============================================================
+// STUDENT REVIEW (IMMUTABLE — no update endpoint)
+// ============================================================
+model StudentReview {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  coachName     String
+  battingRating Int      // 0-100
+  bowlingRating Int      // 0-100
+  fitnessRating Int      // 0-100
+  reviewText    String?
+  createdAt     DateTime @default(now())
+  // No updatedAt intentionally — reviews are immutable
+}
+
+// ============================================================
+// FEEDBACK (Student submits; Admin toggles isTestimonial for website)
+// ============================================================
+model Feedback {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentName   String
+  coachName     String?
+  rating        Int      // 1-5
+  comments      String
+  isTestimonial Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+// ============================================================
+// ACHIEVEMENT (Student creates; Admin toggles isFeatured for website)
+// ============================================================
+model Achievement {
+  id          String    @id @default(cuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  imageUrl    String?
+  date        DateTime?
+  isFeatured  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}

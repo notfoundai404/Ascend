@@ -23,6 +23,13 @@
     margin: 0;
     overflow-x: hidden;
   }
+  select {
+    color: #0f172a !important; /* slate-900 */
+  }
+  select option {
+    color: #0f172a !important; /* slate-900 */
+    background-color: #ffffff !important;
+  }
 }
 
 /* ========================
