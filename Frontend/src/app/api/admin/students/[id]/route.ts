@@ -15,7 +15,7 @@ export const GET = apiHandler(
         reviews: { orderBy: { createdAt: 'desc' } },
         feedbacks: { orderBy: { createdAt: 'desc' } },
         achievements: { orderBy: { createdAt: 'desc' } },
-        user: { select: { isFirstLogin: true, createdAt: true } },
+        user: { select: { role: true, createdAt: true } },
       },
     });
 

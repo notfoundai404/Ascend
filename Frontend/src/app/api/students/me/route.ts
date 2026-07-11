@@ -11,7 +11,7 @@ export const GET = apiHandler(
       where: { userId: user.userId },
       include: {
         coach: { select: { id: true, name: true, specialty: true, phone: true, avatarUrl: true } },
-        user: { select: { isFirstLogin: true, createdAt: true } },
+        user: { select: { role: true, createdAt: true } },
       },
     });
     if (!student) throw AppError.notFound('Student profile not found');

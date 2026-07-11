@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import { apiHandler } from '@/lib/apiHelper';
 import { AppError } from '@/lib/AppError';
 import { prisma } from '@/lib/prisma';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { parsePagination } from '@/lib/pagination';
 import { generateStudentId } from '@/lib/studentId';
-import { generateTempPassword } from '@/lib/password';
-import { activationEmailTemplate } from '@/lib/emailTemplates';
-import { sendEmail } from '@/lib/email';
 
 // GET /api/admin/students — paginated, searchable student list
-// POST /api/admin/students — create a student with temp password + activation email
+// POST /api/admin/students — invite student via Supabase + create Prisma profile
 export const GET = apiHandler(
   async (req, { user }) => {
     const url = new URL(req.url);
@@ -41,7 +38,7 @@ export const GET = apiHandler(
         orderBy: { createdAt: 'desc' },
         include: {
           coach: { select: { id: true, name: true, specialty: true } },
-          user: { select: { isFirstLogin: true, createdAt: true } },
+          user: { select: { createdAt: true } },
           _count: { select: { transactions: true, attendances: true } },
         },
       }),
@@ -70,16 +67,27 @@ export const POST = apiHandler(
       if (!coach) throw AppError.notFound('Coach not found');
     }
 
-    const tempPassword = generateTempPassword();
-    const passwordHash = await bcrypt.hash(tempPassword, 12);
+    // 1. Invite user via Supabase Auth — sends magic link email to set their password
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      email.toLowerCase(),
+      {
+        data: { role: 'STUDENT', fullName },
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
+      }
+    );
+
+    if (authError || !authData?.user) {
+      throw AppError.internal(`Failed to invite user: ${authError?.message ?? 'Unknown error'}`);
+    }
+
     const studentId = await generateStudentId();
 
+    // 2. Create Prisma profile linked by supabaseId
     const userRecord = await prisma.user.create({
       data: {
+        supabaseId: authData.user.id,
         email: email.toLowerCase(),
-        passwordHash,
         role: 'STUDENT',
-        isFirstLogin: true,
         student: {
           create: {
             studentId,
@@ -98,20 +106,8 @@ export const POST = apiHandler(
       include: { student: true },
     });
 
-    const loginUrl = process.env.LOGIN_URL || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`;
-    const { subject, html, text } = activationEmailTemplate({
-      recipientName: fullName,
-      email: email.toLowerCase(),
-      tempPassword,
-      role: 'Student',
-      studentId,
-      loginUrl,
-    });
-
-    await sendEmail({ to: email, subject, html, text });
-
     return NextResponse.json(
-      { success: true, data: { student: userRecord.student, tempPassword } },
+      { success: true, data: { student: userRecord.student } },
       { status: 201 }
     );
   },

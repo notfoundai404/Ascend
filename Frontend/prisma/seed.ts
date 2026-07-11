@@ -1,109 +1,61 @@
 /**
- * Seed script — creates test Admin, Coach, and Student accounts.
- * Run with: npx ts-node --project tsconfig.json -e "require('./prisma/seed.ts')"
- * Or add to package.json prisma.seed and run: npx prisma db seed
+ * Seed script — creates the initial Admin Prisma profile.
+ *
+ * IMPORTANT: The Supabase Auth user must exist FIRST.
+ * 1. Go to Supabase Dashboard → Authentication → Users → Add user
+ * 2. Create user with the admin email & a strong password
+ * 3. Copy the UUID from the user list
+ * 4. Set SEED_ADMIN_SUPABASE_ID and SEED_ADMIN_EMAIL in .env
+ * 5. Run: npx prisma db seed
  */
 
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+
+function requireEnv(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`❌ Missing required environment variable: ${key}\nAdd it to your .env file.`);
+  }
+  return value;
+}
 
 async function main() {
   console.log('🌱 Seeding database...\n');
 
-  // ── ADMIN ──────────────────────────────────────────────
-  const adminHash = await bcrypt.hash('Admin@1234', 12);
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@ascendcricket.in' },
-    update: {},
-    create: {
-      email: 'admin@ascendcricket.in',
-      passwordHash: adminHash,
-      role: 'ADMIN',
-      isFirstLogin: false,
-      admin: {
-        create: {
-          name: 'Academy Admin',
-          email: 'admin@ascendcricket.in',
-        },
-      },
-    },
-  });
-  console.log('✅ Admin created:', adminUser.email);
+  const adminSupabaseId = requireEnv('SEED_ADMIN_SUPABASE_ID');
+  const adminEmail      = requireEnv('SEED_ADMIN_EMAIL');
+  const adminName       = process.env['SEED_ADMIN_NAME'] ?? 'Academy Admin';
 
-  // ── COACH ──────────────────────────────────────────────
-  const coachHash = await bcrypt.hash('Coach@1234', 12);
-  const coachUser = await prisma.user.upsert({
-    where: { email: 'coach.ravi@ascendcricket.in' },
-    update: {},
-    create: {
-      email: 'coach.ravi@ascendcricket.in',
-      passwordHash: coachHash,
-      role: 'COACH',
-      isFirstLogin: false,
-      coach: {
-        create: {
-          name: 'Ravi Kumar',
-          email: 'coach.ravi@ascendcricket.in',
-          phone: '9876543210',
-          specialty: 'Batting',
-          experience: '10 years',
-          rating: 4.5,
-        },
-      },
-    },
-    include: { coach: true },
-  });
-  console.log('✅ Coach created:', coachUser.email);
-
-  // ── STUDENT ────────────────────────────────────────────
-  // Ensure IdCounter exists
+  // Ensure ID counter exists
   await prisma.idCounter.upsert({
     where: { id: 'student_counter' },
     update: {},
     create: { id: 'student_counter', current: 0 },
   });
 
-  const counter = await prisma.idCounter.update({
-    where: { id: 'student_counter' },
-    data: { current: { increment: 1 } },
-  });
-  const studentId = `ASC-${String(counter.current).padStart(3, '0')}`;
-
-  const studentHash = await bcrypt.hash('Student@1234', 12);
-  const studentUser = await prisma.user.upsert({
-    where: { email: 'neil.emmanuel@ascendcricket.in' },
-    update: {},
+  // Create/update admin Prisma profile linked to Supabase Auth user
+  const adminUser = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: { supabaseId: adminSupabaseId },
     create: {
-      email: 'neil.emmanuel@ascendcricket.in',
-      passwordHash: studentHash,
-      role: 'STUDENT',
-      isFirstLogin: false,
-      student: {
+      supabaseId: adminSupabaseId,
+      email: adminEmail,
+      role: 'ADMIN',
+      admin: {
         create: {
-          studentId,
-          fullName: 'Neil Emmanuel',
-          email: 'neil.emmanuel@ascendcricket.in',
-          phone: '9123456789',
-          batch: 'Batch A',
-          cricketRole: 'Batsman',
-          joiningDate: '2024-01-01',
-          totalFees: 30000,
-          uniformFees: 2500,
-          installmentsLimit: 3,
-          primaryCoachId: coachUser.coach?.id ?? null,
+          name: adminName,
+          email: adminEmail,
         },
       },
     },
   });
-  console.log('✅ Student created:', studentUser.email, `(${studentId})`);
 
-  console.log('\n🎉 Seed complete!\n');
+  console.log('✅ Admin profile created:', adminUser.email);
+  console.log('\n🎉 Seed complete!');
   console.log('─────────────────────────────────────────');
-  console.log('  ROLE     EMAIL                          PASSWORD');
-  console.log('  Admin    admin@ascendcricket.in         Admin@1234');
-  console.log('  Student  neil.emmanuel@ascendcricket.in Student@1234');
+  console.log('  Admin profile linked to Supabase user:', adminSupabaseId);
   console.log('─────────────────────────────────────────\n');
 }
 

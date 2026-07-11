@@ -1,8 +1,17 @@
 // ============================================================
 // PRISMA SCHEMA — ASCEND CRICKET ACADEMY
-// Database: SQLite (local dev) / swap to PostgreSQL for production
+// Database: PostgreSQL (Supabase)
 // To use: run `npx prisma migrate dev --name init`
 // ============================================================
+
+// ============================================================
+// ENUMS
+// ============================================================
+enum Role {
+  ADMIN
+  COACH
+  STUDENT
+}
 
 generator client {
   provider = "prisma-client-js"
@@ -18,14 +27,12 @@ datasource db {
 // USER (Auth entity — one per login account)
 // ============================================================
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  role         String   // "ADMIN" | "COACH" | "STUDENT"
-  isFirstLogin Boolean  @default(true)
-  refreshToken String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  supabaseId  String   @unique  // maps to auth.users.id in Supabase
+  email       String   @unique
+  role        Role     // ADMIN | COACH | STUDENT
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   student Student?
   coach   Coach?

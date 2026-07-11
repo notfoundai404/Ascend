@@ -1,7 +1,10 @@
 // ============================================================
 // LIVE API SERVICE — ASCEND CRICKET ACADEMY
 // Client-side fetch wrapper for all ERP API calls.
+// Auth is handled via Supabase (@supabase/supabase-js).
 // ============================================================
+
+import { createClient } from '@/lib/supabase/client';
 
 export interface Profile {
   id: string;
@@ -76,7 +79,7 @@ export interface CalendarEvent {
   title: string;
   description?: string;
   category: 'match' | 'practice' | 'holiday' | 'fee_deadline';
-  eventDate: string; // ISO date
+  eventDate: string;
   createdAt: string;
 }
 
@@ -89,18 +92,16 @@ export interface Coach {
   experience?: string;
   rating: number;
   avatarUrl?: string;
-  _count?: {
-    students: number;
-  };
+  _count?: { students: number };
 }
 
 export interface StudentReview {
   id: string;
   studentId: string;
   coachName: string;
-  battingRating: number; // 0-100
-  bowlingRating: number; // 0-100
-  fitnessRating: number; // 0-100
+  battingRating: number;
+  bowlingRating: number;
+  fitnessRating: number;
   reviewText?: string;
   createdAt: string;
 }
@@ -129,90 +130,43 @@ export interface Achievement {
 
 const API_BASE_URL = '/api';
 
-// No-op for dbService compatibility
-export const initDB = () => {
-  // Database initialization is now handled by the backend migration seeding.
-};
+// No-op for compatibility
+export const initDB = () => {};
 
-// Token storage helpers
-const getAccessToken = () => typeof window !== 'undefined' ? localStorage.getItem('erp_access_token') : null;
-const getRefreshToken = () => typeof window !== 'undefined' ? localStorage.getItem('erp_refresh_token') : null;
-const setTokens = (access: string, refresh: string) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('erp_access_token', access);
-    localStorage.setItem('erp_refresh_token', refresh);
-  }
-};
+// ── Token helpers ─────────────────────────────────────────────
+/** Get the current Supabase access token from the active session. */
+async function getAccessToken(): Promise<string | null> {
+  const supabase = createClient();
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 export const clearTokens = () => {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('erp_access_token');
-    localStorage.removeItem('erp_refresh_token');
     localStorage.removeItem('erp_role');
     localStorage.removeItem('erp_username');
     localStorage.removeItem('erp_user_id');
   }
 };
 
+// ── Fetch wrapper ─────────────────────────────────────────────
 /**
- * Fetch wrapper that attaches headers and handles automatic token refresh on 401.
+ * Fetch wrapper that attaches the Supabase Bearer token.
+ * Token refresh is handled automatically by the @supabase/ssr middleware.
  */
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<any> {
-  const token = getAccessToken();
+  const token = await getAccessToken();
   const headers = new Headers(options.headers || {});
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  // Only set application/json for non-FormData request bodies
   if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${API_BASE_URL}${url}`, {
-    ...options,
-    headers,
-  });
-
-  if (response.status === 401) {
-    // Attempt Token Refresh
-    const refresh = getRefreshToken();
-    if (refresh) {
-      try {
-        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken: refresh }),
-        });
-
-        if (refreshResponse.ok) {
-          const refreshResult = await refreshResponse.json();
-          const { accessToken, refreshToken: newRefresh } = refreshResult.data;
-          setTokens(accessToken, newRefresh);
-
-          // Retry original request
-          headers.set('Authorization', `Bearer ${accessToken}`);
-          const retryResponse = await fetch(`${API_BASE_URL}${url}`, {
-            ...options,
-            headers,
-          });
-
-          if (!retryResponse.ok) {
-            const errBody = await retryResponse.json();
-            throw new Error(errBody.message || 'Request failed after refresh');
-          }
-          return await retryResponse.json();
-        }
-      } catch (refreshErr) {
-        console.error('Session expired, logging out:', refreshErr);
-        clearTokens();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/erp/login';
-        }
-        throw new Error('Session expired');
-      }
-    }
-  }
+  const response = await fetch(`${API_BASE_URL}${url}`, { ...options, headers });
 
   if (!response.ok) {
     const errBody = await response.json().catch(() => ({}));
@@ -223,37 +177,38 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<an
   return await response.json();
 }
 
+// ── Auth ──────────────────────────────────────────────────────
 export const dbService = {
-  // Auth API
   async login(email: string, password: string): Promise<any> {
-    const res = await fetchWithAuth('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    const { accessToken, refreshToken, user } = res.data;
-    setTokens(accessToken, refreshToken);
+    const supabase = createClient();
 
-    localStorage.setItem('erp_role', user.role.toLowerCase());
-    localStorage.setItem('erp_username', user.fullName);
-    localStorage.setItem('erp_user_id', user.id);
-    return res.data;
+    // 1. Sign in with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.session) {
+      throw new Error(error?.message || 'Invalid email or password');
+    }
+
+    // 2. Fetch the Prisma profile using the Supabase access token
+    const profileRes = await fetch(`${API_BASE_URL}/auth/profile`, {
+      headers: { Authorization: `Bearer ${data.session.access_token}` },
+    });
+    if (!profileRes.ok) {
+      const body = await profileRes.json().catch(() => ({}));
+      throw new Error(body.message || 'Failed to load user profile');
+    }
+    const { data: profile } = await profileRes.json();
+
+    // 3. Store role/name in localStorage for UI use
+    localStorage.setItem('erp_role', profile.role.toLowerCase());
+    localStorage.setItem('erp_username', profile.fullName);
+    localStorage.setItem('erp_user_id', profile.id);
+
+    return profile;
   },
 
   async logout(): Promise<void> {
-    try {
-      await fetchWithAuth('/auth/logout', { method: 'POST' });
-    } catch (e) {
-      // Ignore errors during logout
-    } finally {
-      clearTokens();
-    }
-  },
-
-  async changePassword(current: string, newPass: string): Promise<void> {
-    await fetchWithAuth('/auth/change-password', {
-      method: 'POST',
-      body: JSON.stringify({ currentPassword: current, newPassword: newPass }),
-    });
+    const supabase = createClient();
+    await supabase.auth.signOut();
     clearTokens();
   },
 
@@ -294,10 +249,7 @@ export const dbService = {
 
   async addTransaction(tx: FormData | Omit<Transaction, 'id' | 'createdAt' | 'status'>): Promise<Transaction> {
     if (tx instanceof FormData) {
-      const res = await fetchWithAuth('/payments', {
-        method: 'POST',
-        body: tx,
-      });
+      const res = await fetchWithAuth('/payments', { method: 'POST', body: tx });
       return res.data;
     }
     const formData = new FormData();
@@ -307,19 +259,12 @@ export const dbService = {
     if (tx.utrNumber) formData.append('utrNumber', tx.utrNumber);
     if (tx.transactionDatetime) formData.append('transactionDatetime', tx.transactionDatetime);
     if (tx.installmentNumber) formData.append('installmentNumber', String(tx.installmentNumber));
-
-    const res = await fetchWithAuth('/payments', {
-      method: 'POST',
-      body: formData,
-    });
+    const res = await fetchWithAuth('/payments', { method: 'POST', body: formData });
     return res.data;
   },
 
   async updateTransactionStatus(txId: string, status: 'Approved' | 'Rejected', adminId: string): Promise<Transaction> {
-    const endpoint = `/payments/${txId}/${status.toLowerCase()}`;
-    const res = await fetchWithAuth(endpoint, {
-      method: 'PATCH',
-    });
+    const res = await fetchWithAuth(`/payments/${txId}/${status.toLowerCase()}`, { method: 'PATCH' });
     return res.data;
   },
 
@@ -330,10 +275,7 @@ export const dbService = {
   },
 
   async addNotice(notice: Omit<Notice, 'id' | 'createdAt' | 'createdBy' | 'noticeStudents' | 'noticeCoaches'>): Promise<Notice> {
-    const res = await fetchWithAuth('/notices', {
-      method: 'POST',
-      body: JSON.stringify(notice),
-    });
+    const res = await fetchWithAuth('/notices', { method: 'POST', body: JSON.stringify(notice) });
     return res.data;
   },
 
@@ -344,10 +286,7 @@ export const dbService = {
   },
 
   async addEvent(event: Omit<CalendarEvent, 'id' | 'createdAt'>): Promise<CalendarEvent> {
-    const res = await fetchWithAuth('/calendar', {
-      method: 'POST',
-      body: JSON.stringify(event),
-    });
+    const res = await fetchWithAuth('/calendar', { method: 'POST', body: JSON.stringify(event) });
     return res.data;
   },
 
@@ -376,10 +315,7 @@ export const dbService = {
   },
 
   async addReview(review: Omit<StudentReview, 'id' | 'createdAt'>): Promise<StudentReview> {
-    const res = await fetchWithAuth('/students/me/reviews', {
-      method: 'POST',
-      body: JSON.stringify(review),
-    });
+    const res = await fetchWithAuth('/students/me/reviews', { method: 'POST', body: JSON.stringify(review) });
     return res.data;
   },
 
@@ -390,10 +326,7 @@ export const dbService = {
   },
 
   async addFeedback(fb: Omit<Feedback, 'id' | 'createdAt' | 'studentName' | 'isTestimonial' | 'studentId'>): Promise<Feedback> {
-    const res = await fetchWithAuth('/students/me/feedbacks', {
-      method: 'POST',
-      body: JSON.stringify(fb),
-    });
+    const res = await fetchWithAuth('/students/me/feedbacks', { method: 'POST', body: JSON.stringify(fb) });
     return res.data;
   },
 
@@ -404,25 +337,17 @@ export const dbService = {
   },
 
   async addAchievement(formData: FormData): Promise<Achievement> {
-    const res = await fetchWithAuth('/students/me/achievements', {
-      method: 'POST',
-      body: formData,
-    });
+    const res = await fetchWithAuth('/students/me/achievements', { method: 'POST', body: formData });
     return res.data;
   },
 
   async deleteAchievement(id: string): Promise<void> {
-    await fetchWithAuth(`/students/me/achievements/${id}`, {
-      method: 'DELETE',
-    });
+    await fetchWithAuth(`/students/me/achievements/${id}`, { method: 'DELETE' });
   },
 
   // Admin creations
   async adminCreateStudent(data: any): Promise<any> {
-    const res = await fetchWithAuth('/admin/students', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    const res = await fetchWithAuth('/admin/students', { method: 'POST', body: JSON.stringify(data) });
     return res.data;
   },
 
@@ -437,10 +362,7 @@ export const dbService = {
   },
 
   async adminCreateCoach(data: any): Promise<any> {
-    const res = await fetchWithAuth('/admin/coaches', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    const res = await fetchWithAuth('/admin/coaches', { method: 'POST', body: JSON.stringify(data) });
     return res.data;
   },
 
@@ -474,13 +396,11 @@ export const dbService = {
     return res.data;
   },
 
-  /** Student: fetch own attendance history + stats */
   async getMyAttendance(): Promise<{ stats: any; records: any[] }> {
     const res = await fetchWithAuth('/students/me/attendance');
     return res.data;
   },
 
-  /** Coach: fetch own profile */
   async getCoachProfile(): Promise<Coach> {
     const res = await fetchWithAuth('/coaches/me');
     return res.data;
@@ -502,9 +422,9 @@ export const dbService = {
     return res.data;
   },
 
-  // Role dashboard aggregator
+  // Dashboard
   async getDashboardData(): Promise<any> {
     const res = await fetchWithAuth('/dashboard');
     return res.data;
-  }
+  },
 };
