@@ -26,7 +26,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
   /* Eliminate 300ms tap delay on iOS / Android */
   a, button, select, input[type="checkbox"], input[type="radio"], label {
