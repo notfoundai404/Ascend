@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { apiHandler } from '@/lib/apiHelper';
 import { AppError } from '@/lib/AppError';
 import { prisma } from '@/lib/prisma';
-import { supabaseAdmin } from '@/lib/supabase/admin';
 import { parsePagination } from '@/lib/pagination';
 import { generateStudentId } from '@/lib/studentId';
 
 // GET /api/admin/students — paginated, searchable student list
-// POST /api/admin/students — invite student via Supabase + create Prisma profile
+// POST /api/admin/students — create student via Supabase invite email (no SMTP needed)
 export const GET = apiHandler(
   async (req, { user }) => {
     const url = new URL(req.url);
@@ -67,17 +66,23 @@ export const POST = apiHandler(
       if (!coach) throw AppError.notFound('Coach not found');
     }
 
-    // 1. Invite user via Supabase Auth — sends magic link email to set their password
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      email.toLowerCase(),
-      {
+    // 1. Invite the user via Supabase Auth — Supabase sends the invite email automatically
+    const { inviteUserByEmail } = await import('@/lib/email');
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    let authUserId: string;
+    try {
+      const invited = await inviteUserByEmail(email.toLowerCase(), {
         data: { role: 'STUDENT', fullName },
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
-      }
-    );
-
-    if (authError || !authData?.user) {
-      throw AppError.internal(`Failed to invite user: ${authError?.message ?? 'Unknown error'}`);
+        // redirectTo must be whitelisted in Supabase Dashboard → Auth → URL Configuration → Redirect URLs
+        redirectTo: `${appUrl}/auth/confirm`,
+      });
+      authUserId = invited.userId;
+      console.log(`[students/route] Invite email sent to: ${email.toLowerCase()}`);
+    } catch (inviteErr) {
+      console.error('[students/route] Supabase inviteUserByEmail error:', inviteErr);
+      throw AppError.internal(
+        `Failed to invite user: ${inviteErr instanceof Error ? inviteErr.message : String(inviteErr)}`
+      );
     }
 
     const studentId = await generateStudentId();
@@ -85,7 +90,7 @@ export const POST = apiHandler(
     // 2. Create Prisma profile linked by supabaseId
     const userRecord = await prisma.user.create({
       data: {
-        supabaseId: authData.user.id,
+        supabaseId: authUserId,
         email: email.toLowerCase(),
         role: 'STUDENT',
         student: {

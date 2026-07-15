@@ -51,11 +51,13 @@ export const POST = apiHandler(
     if (existing) throw AppError.conflict('A user with this email already exists');
 
     // 1. Invite coach via Supabase Auth
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
       email.toLowerCase(),
       {
         data: { role: 'COACH', fullName: name },
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
+        // redirectTo must be whitelisted in Supabase Dashboard → Auth → URL Configuration → Redirect URLs
+        redirectTo: `${appUrl}/auth/confirm`,
       }
     );
 

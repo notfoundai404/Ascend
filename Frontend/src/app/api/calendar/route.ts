@@ -33,7 +33,7 @@ export const GET = apiHandler(
 
 export const POST = apiHandler(
   async (req, { user }) => {
-    const { title, description, category, eventDate } = await req.json();
+    const { title, description, imageUrl, category, eventDate } = await req.json();
 
     if (!title || !category || !eventDate) {
       throw AppError.badRequest('title, category, and eventDate are required');
@@ -43,6 +43,7 @@ export const POST = apiHandler(
       data: {
         title,
         description: description ?? null,
+        imageUrl: imageUrl ?? null,
         category,
         eventDate: new Date(eventDate),
         createdBy: user.userId,

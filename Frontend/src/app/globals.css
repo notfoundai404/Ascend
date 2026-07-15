@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -5,7 +6,7 @@
   --color-rplay-dark: #0B0F1E;
   --color-rplay-gray: #0F1528;
   --color-rplay-light-gray: #162040;
-  --font-sans: "Outfit", sans-serif;
+  --font-sans: "Inter", "Outfit", sans-serif;
   --font-display: "Racing Sans One", sans-serif;
   --font-condensed: "League Gothic", sans-serif;
 }
@@ -23,7 +24,7 @@
     margin: 0;
     overflow-x: hidden;
   }
-  select {
+  input, textarea, select {
     color: #0f172a !important; /* slate-900 */
   }
   select option {

@@ -3,9 +3,10 @@ import { apiHandler } from '@/lib/apiHelper';
 import { AppError } from '@/lib/AppError';
 import { prisma } from '@/lib/prisma';
 import { parsePagination } from '@/lib/pagination';
+import { uploadToStorage } from '@/lib/storage';
 
-// GET /api/notices — role-filtered notice list
-// POST /api/notices — Admin: create notice
+// GET /api/notices — public list (ALL visibility) or full list for ADMIN
+// POST /api/notices — Admin: create notice (supports multipart/form-data with image)
 export const GET = apiHandler(
   async (req, { user }) => {
     const url = new URL(req.url);
@@ -16,31 +17,11 @@ export const GET = apiHandler(
     const category = String(query.category || '');
     const categoryFilter = category ? { category } : {};
 
-    let where: Record<string, unknown> = {};
-
-    if (user.role === 'ADMIN') {
-      where = { ...categoryFilter };
-    } else if (user.role === 'STUDENT') {
-      const student = await prisma.student.findUnique({ where: { userId: user.userId } });
-      if (!student) throw AppError.notFound('Student not found');
-      where = {
-        ...categoryFilter,
-        OR: [
-          { visibility: 'ALL' },
-          { visibility: 'SELECTED_STUDENTS', noticeStudents: { some: { studentId: student.id } } },
-        ],
-      };
-    } else if (user.role === 'COACH') {
-      const coach = await prisma.coach.findUnique({ where: { userId: user.userId } });
-      if (!coach) throw AppError.notFound('Coach not found');
-      where = {
-        ...categoryFilter,
-        OR: [
-          { visibility: 'ALL' },
-          { visibility: 'SELECTED_COACHES', noticeCoaches: { some: { coachId: coach.id } } },
-        ],
-      };
-    }
+    // Admins see all notices; everyone else (including guests) sees only public ones
+    const where: Record<string, unknown> =
+      user?.role === 'ADMIN'
+        ? { ...categoryFilter }
+        : { ...categoryFilter, visibility: 'ALL' };
 
     const [notices, total] = await Promise.all([
       prisma.notice.findMany({
@@ -58,12 +39,39 @@ export const GET = apiHandler(
 
     return NextResponse.json({ success: true, data: { notices, page, limit, total } });
   },
-  { roles: ['ADMIN', 'COACH', 'STUDENT'] }
+  { optionalAuth: true }
 );
 
 export const POST = apiHandler(
   async (req, { user }) => {
-    const { title, content, category, visibility, targetStudentIds, targetCoachIds } = await req.json();
+    const contentType = req.headers.get('content-type') || '';
+    let title: string, content: string, category: string, visibility: string;
+    let targetStudentIds: string[] | undefined;
+    let targetCoachIds: string[] | undefined;
+    let imageUrl: string | null = null;
+
+    if (contentType.includes('multipart/form-data')) {
+      // FormData path — image file included
+      const formData = await req.formData();
+      title = formData.get('title') as string;
+      content = formData.get('content') as string;
+      category = formData.get('category') as string;
+      visibility = formData.get('visibility') as string;
+      const raw = formData.get('targetStudentIds') as string | null;
+      targetStudentIds = raw ? JSON.parse(raw) : undefined;
+      const rawCoach = formData.get('targetCoachIds') as string | null;
+      targetCoachIds = rawCoach ? JSON.parse(rawCoach) : undefined;
+
+      const imageFile = formData.get('image') as File | null;
+      if (imageFile && imageFile.size > 0) {
+        imageUrl = await uploadToStorage(imageFile, 'erp-media', 'notices');
+      }
+    } else {
+      // JSON path — no image or already a URL string
+      const body = await req.json();
+      ({ title, content, category, visibility, targetStudentIds, targetCoachIds } = body);
+      imageUrl = body.imageUrl ?? null;
+    }
 
     const notice = await prisma.notice.create({
       data: {
@@ -71,6 +79,7 @@ export const POST = apiHandler(
         content,
         category,
         visibility,
+        imageUrl,
         createdBy: user.userId,
         ...(visibility === 'SELECTED_STUDENTS' && targetStudentIds?.length
           ? { noticeStudents: { create: targetStudentIds.map((sid: string) => ({ studentId: sid })) } }

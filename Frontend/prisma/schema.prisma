@@ -152,6 +152,10 @@ model Transaction {
   installmentNumber   Int       @default(1)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+
+  @@index([studentId])
+  @@index([status])
+  @@index([studentId, status])
 }
 
 // ============================================================
@@ -163,12 +167,16 @@ model Notice {
   content        String
   category       String          // "urgent" | "general" | "event"
   visibility     String          @default("ALL") // "ALL" | "SELECTED_STUDENTS" | "SELECTED_COACHES"
+  imageUrl       String?         // Optional attached image
   createdBy      String          // userId of creator
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   noticeStudents NoticeStudent[]
   noticeCoaches  NoticeCoach[]
+
+  @@index([createdAt])
+  @@index([visibility])
 }
 
 model NoticeStudent {
@@ -196,6 +204,7 @@ model CalendarEvent {
   id          String   @id @default(cuid())
   title       String
   description String?
+  imageUrl    String?  // Optional attached image
   category    String   // "match" | "practice" | "holiday" | "fee_deadline"
   eventDate   DateTime
   createdBy   String   // userId
@@ -203,6 +212,8 @@ model CalendarEvent {
   updatedAt   DateTime @updatedAt
 
   attendances Attendance[]
+
+  @@index([eventDate])
 }
 
 // ============================================================
@@ -225,6 +236,8 @@ model Attendance {
   updatedAt DateTime      @updatedAt
 
   @@unique([date, studentId])
+  @@index([studentId])
+  @@index([date])
 }
 
 // ============================================================
@@ -260,6 +273,8 @@ model StudentReview {
   reviewText    String?
   createdAt     DateTime @default(now())
   // No updatedAt intentionally — reviews are immutable
+
+  @@index([studentId])
 }
 
 // ============================================================
@@ -275,6 +290,8 @@ model Feedback {
   comments      String
   isTestimonial Boolean  @default(false)
   createdAt     DateTime @default(now())
+
+  @@index([studentId])
 }
 
 // ============================================================
@@ -290,4 +307,6 @@ model Achievement {
   date        DateTime?
   isFeatured  Boolean   @default(false)
   createdAt   DateTime  @default(now())
+
+  @@index([studentId])
 }

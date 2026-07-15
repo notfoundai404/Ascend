@@ -2,20 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { apiHandler } from '@/lib/apiHelper';
 import { AppError } from '@/lib/AppError';
 import { prisma } from '@/lib/prisma';
+import { parsePagination } from '@/lib/pagination';
 
-// GET /api/students/me/feedbacks
+// GET /api/students/me/feedbacks — paginated
 // POST /api/students/me/feedbacks
 export const GET = apiHandler(
-  async (_req, { user }) => {
-    const student = await prisma.student.findUnique({ where: { userId: user.userId } });
-    if (!student) throw AppError.notFound('Student not found');
+  async (req, { user }) => {
+    const url = new URL(req.url);
+    const query: Record<string, unknown> = {};
+    url.searchParams.forEach((v, k) => { query[k] = v; });
+    const { page, limit, skip } = parsePagination(query);
 
-    const feedbacks = await prisma.feedback.findMany({
-      where: { studentId: student.id },
-      orderBy: { createdAt: 'desc' },
+    // user.studentId is already resolved by apiHelper — no extra DB lookup needed
+    const studentId = user.studentId;
+    if (!studentId) throw AppError.notFound('Student profile not found');
+
+    const [feedbacks, total] = await Promise.all([
+      prisma.feedback.findMany({
+        where: { studentId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.feedback.count({ where: { studentId } }),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      data: feedbacks,
+      pagination: { page, limit, total, hasMore: skip + limit < total },
     });
-
-    return NextResponse.json({ success: true, data: feedbacks });
   },
   { roles: ['STUDENT'] }
 );
@@ -31,7 +47,7 @@ export const POST = apiHandler(
       data: {
         studentId: student.id,
         studentName: student.fullName,
-        coachName: coachName ?? null,
+        coachName: coachName || null,
         rating,
         comments,
       },

@@ -66,7 +66,7 @@ export const Footer: React.FC = () => {
                   </svg>
                   <div>
                     <p className="text-white/60 text-xs font-sans uppercase tracking-widest mb-1">Email</p>
-                    <a href="mailto:info@ascendcricket.com" className="text-white text-sm font-sans hover:text-[var(--color-rplay-green)] transition-colors duration-200">info@ascendcricket.com</a>
+                    <a href="mailto:admin@ascendcricketacademy.com" className="text-white text-sm font-sans hover:text-[var(--color-rplay-green)] transition-colors duration-200">admin@ascendcricketacademy.com</a>
                   </div>
                 </div>
               </div>
@@ -118,7 +118,7 @@ export const Footer: React.FC = () => {
                     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
                   </svg>
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-white transition-colors duration-200">
+                <a href="https://www.instagram.com/ascend_sg2026/" target="_blank" rel="noreferrer" className="hover:text-white transition-colors duration-200">
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>

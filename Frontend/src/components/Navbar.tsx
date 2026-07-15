@@ -72,7 +72,7 @@ export const Navbar: React.FC = () => {
         <div className="w-full max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
           {/* Logo */}
           <a href="#home" onClick={(e) => handleLinkClick(e, 'home')}>
-            <Logo iconSize={36} variant="light" />
+            <Logo iconSize={36} variant="light" singleLine />
           </a>
 
           {/* Desktop nav links */}
@@ -105,7 +105,7 @@ export const Navbar: React.FC = () => {
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
                 </svg>
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition-colors duration-200">
+              <a href="https://www.instagram.com/ascend_sg2026/" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition-colors duration-200">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
@@ -119,11 +119,10 @@ export const Navbar: React.FC = () => {
               </a>
             </div>
             <a
-              href="#join"
-              onClick={(e) => handleLinkClick(e, 'join')}
+              href="/login"
               className="bg-[var(--color-rplay-green)] text-white font-semibold text-xs tracking-widest px-6 py-2.5 rounded hover:bg-opacity-95 transform active:scale-95 transition-all shadow-[0_0_15px_rgba(27,58,140,0.4)] hover:shadow-[0_0_20px_rgba(27,58,140,0.6)] font-sans"
             >
-              ENROLL NOW
+              LOGIN
             </a>
           </div>
 
@@ -169,7 +168,7 @@ export const Navbar: React.FC = () => {
                 <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
               </svg>
             </a>
-            <a href="https://instagram.com" className="hover:text-gray-900 transition-colors duration-200">
+            <a href="https://www.instagram.com/ascend_sg2026/" className="hover:text-gray-900 transition-colors duration-200">
               <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
@@ -184,11 +183,10 @@ export const Navbar: React.FC = () => {
           </div>
 
           <a
-            href="#join"
-            onClick={(e) => handleLinkClick(e, 'join')}
+            href="/login"
             className="mt-6 bg-[var(--color-rplay-green)] text-white font-bold text-sm tracking-widest px-8 py-3 rounded hover:bg-opacity-95 font-sans"
           >
-            ENROLL NOW
+            LOGIN
           </a>
         </div>
       </div>

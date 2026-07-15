@@ -4,21 +4,29 @@ import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 
 /**
- * GET /api/auth/profile
- * Returns the Prisma user profile for the currently authenticated session.
- * Reads from the HTTP-only session cookie set by Supabase SSR middleware.
+ * POST /api/auth/login
+ * Signs the user in with Supabase and returns their Prisma profile.
+ * Supabase SSR automatically writes the session as an HTTP-only cookie
+ * via the server client + middleware — no token is returned to the client.
  */
-export async function GET(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user: supabaseUser }, error } = await supabase.auth.getUser();
+    const { email, password } = await req.json();
 
-    if (error || !supabaseUser) {
-      throw AppError.unauthorized('No active session');
+    if (!email || !password) {
+      throw AppError.badRequest('Email and password are required');
     }
 
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.session) {
+      throw AppError.unauthorized(error?.message || 'Invalid email or password');
+    }
+
+    // Load the Prisma profile linked to this Supabase user
     const user = await prisma.user.findUnique({
-      where: { supabaseId: supabaseUser.id },
+      where: { supabaseId: data.user.id },
       include: { student: true, coach: true, admin: true },
     });
 
