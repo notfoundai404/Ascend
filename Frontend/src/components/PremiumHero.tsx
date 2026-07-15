@@ -122,7 +122,7 @@ export const PremiumHero: React.FC = () => {
                 className="block font-bold leading-none uppercase text-white"
                 style={{
                   fontFamily: '"League Gothic", sans-serif',
-                  fontSize: 'clamp(4rem, 12vw, 10.5rem)',
+                  fontSize: 'clamp(3.2rem, 12vw, 10.5rem)',
                   letterSpacing: '-0.01em',
                   textShadow: '0 2px 20px rgba(0,0,0,0.4)',
                   color: word === 'PLAY?' ? 'var(--color-rplay-green)' : undefined,
@@ -154,7 +154,7 @@ export const PremiumHero: React.FC = () => {
         >
           <MagneticButton
             onClick={() => handleScrollTo('join')}
-            className="relative bg-[var(--color-rplay-green)] text-white font-bold text-xs sm:text-sm tracking-[0.2em] px-9 sm:px-14 py-4 sm:py-5 uppercase overflow-hidden group shadow-[0_4px_24px_rgba(34,197,94,0.35)]"
+            className="relative bg-[var(--color-rplay-green)] text-white font-bold text-[10px] sm:text-sm tracking-[0.2em] px-6 sm:px-14 py-3 sm:py-5 uppercase overflow-hidden group shadow-[0_4px_24px_rgba(34,197,94,0.35)]"
             strength={32}
           >
             <span className="relative z-10" style={{ fontFamily: '"Outfit", sans-serif' }}>ENROLL NOW</span>
@@ -167,7 +167,7 @@ export const PremiumHero: React.FC = () => {
 
           <button
             onClick={() => handleScrollTo('about')}
-            className="flex items-center gap-3 text-white/70 hover:text-white text-xs sm:text-sm tracking-[0.2em] uppercase font-semibold transition-colors duration-300 group"
+            className="flex items-center gap-3 text-white/70 hover:text-white text-[10px] sm:text-sm tracking-[0.2em] uppercase font-semibold transition-colors duration-300 group"
             style={{ fontFamily: '"Outfit", sans-serif' }}
           >
             <span>LEARN MORE</span>
@@ -225,7 +225,7 @@ export const PremiumHero: React.FC = () => {
 
       {/* ─── Image Indicator Dots ─── */}
       <motion.div
-        className="absolute bottom-9 left-1/2 -translate-x-1/2 flex gap-2 z-20"
+        className="absolute bottom-9 left-1/2 -translate-x-1/2 flex gap-2 z-20 w-32 justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.8, duration: 0.6 }}

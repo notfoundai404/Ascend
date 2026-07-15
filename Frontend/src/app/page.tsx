@@ -15,7 +15,7 @@ import Schedule from '@/components/Schedule';
 
 export default function Home() {
   return (
-    <div className="w-full bg-[var(--color-rplay-dark)] min-h-screen select-none">
+    <div className="w-full bg-[var(--color-rplay-dark)] min-h-screen select-none overflow-x-hidden">
       <Navbar />
       
       <PremiumHero />

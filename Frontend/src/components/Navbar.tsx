@@ -67,13 +67,13 @@ export const Navbar: React.FC = () => {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-gray-200 h-12 md:h-20 flex items-center ${scrolled ? 'shadow-lg' : ''}`}
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-gray-200 h-16 md:h-20 flex items-center transform-gpu ${scrolled ? 'shadow-lg' : ''}`}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 flex items-center justify-between">
           {/* Logo */}
           <a href="#home" onClick={(e) => handleLinkClick(e, 'home')} className="flex items-center">
             <div className="md:hidden flex items-center">
-              <Logo iconSize={24} variant="light" singleLine />
+              <Logo iconSize={20} variant="light" singleLine />
             </div>
             <div className="hidden md:flex items-center">
               <Logo iconSize={36} variant="light" singleLine />
