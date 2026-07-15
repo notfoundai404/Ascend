@@ -279,11 +279,11 @@ export const ScrollStory: React.FC = () => {
       style={{ height: sectionHeight }}
     >
       {/* Sticky container */}
-      <div className="sticky top-20 h-[calc(100vh-5rem)] w-full overflow-hidden">
+      <div className="sticky top-0 h-screen w-full overflow-hidden">
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
         {/* Overlay */}
-        <div className="absolute inset-0 z-10 flex flex-col justify-between px-6 sm:px-10 md:px-16 lg:px-24 pt-10 pb-10 md:pt-16 md:pb-16">
+        <div className="absolute inset-0 z-10 flex flex-col justify-between px-6 sm:px-10 md:px-16 lg:px-24 pt-24 pb-10 md:pt-32 md:pb-16">
 
           {/* Top label */}
           <div className="text-center w-full">
