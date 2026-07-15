@@ -477,6 +477,21 @@ export default function ErpDashboard() {
     }
   };
 
+  // Delete notice (Admin/Coach)
+  const handleDeleteNotice = async (noticeId: string) => {
+    if (!confirm('Delete this notice? This action cannot be undone.')) return;
+    setLoadingAction(`delete_notice_${noticeId}`);
+    try {
+      await dbService.deleteNotice(noticeId);
+      showNotif('Notice deleted.');
+      setNotices((prev) => prev.filter((n) => n.id !== noticeId));
+    } catch (err: any) {
+      showNotif(err.message || 'Failed to delete notice.', 'error');
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
   // Create calendar event (Admin/Coach)
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1713,6 +1728,18 @@ export default function ErpDashboard() {
                                 <span className="text-[10px] font-bold text-slate-400">
                                   {new Date(notice.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                 </span>
+                                {(role === 'admin' || role === 'coach') && (
+                                  <button
+                                    onClick={() => handleDeleteNotice(notice.id)}
+                                    disabled={loadingAction === `delete_notice_${notice.id}`}
+                                    className="text-slate-300 hover:text-red-500 transition-colors disabled:opacity-50 p-1 rounded-lg hover:bg-red-50"
+                                    title="Delete notice"
+                                  >
+                                    {loadingAction === `delete_notice_${notice.id}`
+                                      ? <Loader2 size={13} className="animate-spin" />
+                                      : <Trash2 size={13} />}
+                                  </button>
+                                )}
                               </div>
                               <h5 className="text-sm font-bold text-slate-900 mb-2 leading-snug group-hover:text-[#1B3A8C] transition-colors">
                                 {notice.title}

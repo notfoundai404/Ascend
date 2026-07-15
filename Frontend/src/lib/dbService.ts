@@ -263,6 +263,10 @@ export const dbService = {
     return res.data;
   },
 
+  async deleteNotice(id: string): Promise<void> {
+    await fetchAPI(`/notices/${id}`, { method: 'DELETE' });
+  },
+
   // Calendar Events API
   async getEvents(): Promise<CalendarEvent[]> {
     const res = await fetchAPI('/calendar');
