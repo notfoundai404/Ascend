@@ -136,7 +136,9 @@ export const Navbar: React.FC = () => {
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden text-gray-800 hover:text-[var(--color-rplay-green)] transition-colors duration-200 p-2"
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            <span className="w-6 h-6 flex items-center justify-center">
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </span>
           </button>
         </div>
 
