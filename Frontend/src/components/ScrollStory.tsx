@@ -278,12 +278,12 @@ export const ScrollStory: React.FC = () => {
       className="relative w-full bg-[#1B3A8C]"
       style={{ height: sectionHeight }}
     >
-      {/* Sticky container */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
+      {/* Sticky container — offset by navbar height (h-16 mobile / h-20 desktop) */}
+      <div className="sticky top-16 md:top-20 h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)] w-full overflow-hidden">
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
         {/* Overlay */}
-        <div className="absolute inset-0 z-10 flex flex-col justify-between px-6 sm:px-10 md:px-16 lg:px-24 pt-24 pb-10 md:pt-32 md:pb-16">
+        <div className="absolute inset-0 z-10 flex flex-col justify-between px-6 sm:px-10 md:px-16 lg:px-24 pt-8 pb-10 md:pt-12 md:pb-16">
 
           {/* Top label */}
           <div className="text-center w-full">
