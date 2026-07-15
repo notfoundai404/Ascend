@@ -956,7 +956,7 @@ export default function ErpDashboard() {
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top header bar */}
         <header
-          style={{ height: '64px', background: '#ffffff', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', flexShrink: 0 }}
+          className="h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-4 sm:px-7 shrink-0"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <button
@@ -982,7 +982,7 @@ export default function ErpDashboard() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto" style={{ padding: '28px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-7" style={{ maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
 
           {/* ── Inline notification banner ───────────────────────────────── */}
           <AnimatePresence>
@@ -1045,13 +1045,10 @@ export default function ErpDashboard() {
                 <div className="space-y-6">
                   {/* Welcome hero banner */}
                   <div
+                    className="rounded-2xl text-white relative overflow-hidden"
                     style={{
                       background: 'linear-gradient(135deg, #0d2260 0%, #1B3A8C 55%, #2a56cc 100%)',
-                      borderRadius: '16px',
-                      padding: '36px 40px',
-                      color: '#ffffff',
-                      position: 'relative',
-                      overflow: 'hidden',
+                      padding: 'clamp(20px, 4vw, 36px) clamp(16px, 4vw, 40px)',
                       boxShadow: '0 8px 40px rgba(27,58,140,0.28)',
                     }}
                   >
@@ -1810,7 +1807,7 @@ export default function ErpDashboard() {
               {activeTab === 'payment' && (
                 <div className="space-y-6">
                   {role === 'student' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                       <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between h-28">
                         <span className="text-[10px] font-bold text-slate-400 uppercase">Tuition Fee</span>
                         <span className="text-2xl font-extrabold text-[#1B3A8C]">₹{totalFeesCharged.toLocaleString('en-IN')}</span>
@@ -2308,14 +2305,14 @@ export default function ErpDashboard() {
       {/* 1. Payment Wizard Modal */}
       {paymentModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-6 border-b flex items-center justify-between">
+          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between shrink-0">
               <h3 className="text-lg font-bold text-slate-900">Academy Fee Payment Proof Submission</h3>
               <button onClick={() => setPaymentModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Installment Type</label>
                 <select value={payType} onChange={(e) => setPayType(e.target.value as any)} className="w-full p-2.5 bg-slate-50 border rounded-xl">
@@ -2374,14 +2371,14 @@ export default function ErpDashboard() {
       {/* 2. Notice Modal */}
       {noticeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-6 border-b flex items-center justify-between">
+          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between shrink-0">
               <h3 className="text-lg font-bold text-slate-900">Broadcast Notice Board Alert</h3>
               <button onClick={() => setNoticeModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleAddNotice} className="p-6 space-y-4">
+            <form onSubmit={handleAddNotice} className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-1">Notice Title</label>
                 <input type="text" required value={newNoticeTitle} onChange={e => setNewNoticeTitle(e.target.value)} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" />
@@ -2438,19 +2435,19 @@ export default function ErpDashboard() {
       {/* 3. Event Modal */}
       {eventModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-6 border-b flex items-center justify-between">
+          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between shrink-0">
               <h3 className="text-lg font-bold text-slate-900">Add COE Calendar Schedule</h3>
               <button onClick={() => setEventModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleAddEvent} className="p-6 space-y-4">
+            <form onSubmit={handleAddEvent} className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-1">Event Title</label>
                 <input type="text" required value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1">Category</label>
                   <select value={newEventCat} onChange={e => setNewEventCat(e.target.value as any)} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs">
@@ -2501,15 +2498,15 @@ export default function ErpDashboard() {
       {/* 4. Coach log review modal */}
       {reviewModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-6 border-b flex items-center justify-between">
+          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between shrink-0">
               <h3 className="text-lg font-bold text-slate-900">Log Student Skill Evaluation</h3>
               <button onClick={() => setReviewModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleAddReview} className="p-6 space-y-4">
-              <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold bg-slate-50 p-4 rounded-xl">
+            <form onSubmit={handleAddReview} className="p-6 space-y-4 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-xs font-bold bg-slate-50 p-4 rounded-xl">
                 <div>
                   <span>Batting Skill (0-100)</span>
                   <input type="number" min="0" max="100" value={reviewBatting} onChange={e => setReviewBatting(parseInt(e.target.value) || 0)} className="w-full text-center border p-1 rounded mt-1 bg-white" />
@@ -2538,14 +2535,14 @@ export default function ErpDashboard() {
       {/* 5. Student submit achievement modal */}
       {achModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-6 border-b flex items-center justify-between">
+          <div className="bg-white rounded-3xl border w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between shrink-0">
               <h3 className="text-lg font-bold text-slate-900">Submit Achievement</h3>
               <button onClick={() => setAchModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleAddAchievement} className="p-6 space-y-4">
+            <form onSubmit={handleAddAchievement} className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-1">Achievement Title</label>
                 <input type="text" placeholder="e.g. Century in KSCA Under-16 Tournament" required value={achTitle} onChange={e => setAchTitle(e.target.value)} className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs" />

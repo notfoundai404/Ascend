@@ -50,24 +50,25 @@ export const Schedule: React.FC = () => {
               ACA Prime Team Coaching
             </span>
             <h2
-              className="font-condensed text-5xl sm:text-6xl md:text-7xl font-bold tracking-wider text-white uppercase"
+              className="font-condensed text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-wider text-white uppercase"
               style={{ fontFamily: '"League Gothic", sans-serif' }}
             >
               Practice <span className="text-[var(--color-rplay-green)]">Timings</span>
             </h2>
           </div>
 
-
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-rplay-green)] opacity-60" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-rplay-green)]" />
-          </span>
-          <span
-            className="text-[10px] tracking-[0.3em] uppercase text-white/40 font-medium"
-            style={{ fontFamily: '"Outfit", sans-serif' }}
-          >
-            Current Schedule
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2 flex-shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-rplay-green)] opacity-60" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-rplay-green)]" />
+            </span>
+            <span
+              className="text-[10px] tracking-[0.3em] uppercase text-white/40 font-medium"
+              style={{ fontFamily: '"Outfit", sans-serif' }}
+            >
+              Current Schedule
+            </span>
+          </div>
         </motion.div>
 
         {/* Schedule cards */}

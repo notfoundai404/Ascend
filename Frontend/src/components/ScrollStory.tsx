@@ -66,6 +66,18 @@ export const ScrollStory: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [sectionHeight, setSectionHeight] = useState(`${coachingSteps.length * 150}vh`);
+
+  // Use shorter scroll height on mobile devices
+  useEffect(() => {
+    const updateHeight = () => {
+      const isMobile = window.innerWidth < 768;
+      setSectionHeight(`${coachingSteps.length * (isMobile ? 90 : 150)}vh`);
+    };
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -264,7 +276,7 @@ export const ScrollStory: React.FC = () => {
       id="journey"
       ref={containerRef}
       className="relative w-full bg-[#1B3A8C]"
-      style={{ height: `${coachingSteps.length * 150}vh` }}
+      style={{ height: sectionHeight }}
     >
       {/* Sticky container */}
       <div className="sticky top-20 h-[calc(100vh-5rem)] w-full overflow-hidden">
@@ -291,7 +303,7 @@ export const ScrollStory: React.FC = () => {
             {coachingSteps.map((step, index) => (
               <motion.div
                 key={index}
-                className="absolute max-w-xl px-4"
+                className="absolute max-w-xl px-4 left-4 sm:left-auto"
                 initial={{ opacity: 0, y: 18 }}
                 animate={{
                   opacity: currentStep === index ? 1 : 0,

@@ -47,9 +47,9 @@ export const PremiumTestimonials: React.FC = () => {
   }, []);
 
   return (
-    <section className="py-24 md:py-32 bg-[var(--color-rplay-light-gray)]">
+    <section className="py-16 sm:py-24 md:py-32 bg-[var(--color-rplay-light-gray)]">
       <div className="max-w-6xl mx-auto px-6 md:px-12">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -63,7 +63,7 @@ export const PremiumTestimonials: React.FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="font-condensed text-4xl md:text-6xl font-bold text-white uppercase"
+            className="font-condensed text-3xl sm:text-4xl md:text-6xl font-bold text-white uppercase"
           >
             What Our Players Say
           </motion.h2>
@@ -79,22 +79,22 @@ export const PremiumTestimonials: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <div className="text-6xl mb-8 text-[var(--color-rplay-green)]">"</div>
-              <p className="font-sans text-xl md:text-2xl lg:text-3xl text-white leading-relaxed mb-10 max-w-4xl mx-auto">
+              <div className="text-5xl sm:text-6xl mb-4 sm:mb-8 text-[var(--color-rplay-green)]">"</div>
+              <p className="font-sans text-base sm:text-xl md:text-2xl lg:text-3xl text-white leading-relaxed mb-8 sm:mb-10 max-w-4xl mx-auto">
                 {testimonials[currentIndex].quote}
               </p>
               <div>
-                <p className="font-condensed text-xl md:text-2xl text-white font-bold">{testimonials[currentIndex].author}</p>
+                <p className="font-condensed text-lg sm:text-xl md:text-2xl text-white font-bold">{testimonials[currentIndex].author}</p>
                 <p className="font-sans text-sm md:text-base text-white/60 tracking-wide uppercase mt-1">{testimonials[currentIndex].role}</p>
               </div>
             </motion.div>
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="flex justify-center items-center gap-6 mt-12">
+          <div className="flex justify-center items-center gap-6 mt-10 sm:mt-12">
             <button
               onClick={prev}
-              className="w-12 h-12 flex items-center justify-center border border-white/30 text-white hover:border-[var(--color-rplay-green)] hover:text-[var(--color-rplay-green)] transition-all duration-300"
+              className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center border border-white/30 text-white hover:border-[var(--color-rplay-green)] hover:text-[var(--color-rplay-green)] transition-all duration-300 touch-manipulation"
             >
               <ChevronLeft size={24} />
             </button>
@@ -104,8 +104,8 @@ export const PremiumTestimonials: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => setCurrentIndex(idx)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    idx === currentIndex ? 'bg-[var(--color-rplay-green)] w-8' : 'bg-white/30'
+                  className={`h-2 rounded-full transition-all duration-300 touch-manipulation ${
+                    idx === currentIndex ? 'bg-[var(--color-rplay-green)] w-8' : 'bg-white/30 w-2'
                   }`}
                 />
               ))}
@@ -113,7 +113,7 @@ export const PremiumTestimonials: React.FC = () => {
 
             <button
               onClick={next}
-              className="w-12 h-12 flex items-center justify-center border border-white/30 text-white hover:border-[var(--color-rplay-green)] hover:text-[var(--color-rplay-green)] transition-all duration-300"
+              className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center border border-white/30 text-white hover:border-[var(--color-rplay-green)] hover:text-[var(--color-rplay-green)] transition-all duration-300 touch-manipulation"
             >
               <ChevronRight size={24} />
             </button>

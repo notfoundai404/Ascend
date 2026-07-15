@@ -349,6 +349,7 @@ export default function ErpLogin() {
                           borderRadius: '8px',
                           color: '#0f172a',
                           outline: 'none',
+                          fontSize: '16px',
                         }}
                         onFocus={(e) => {
                           e.currentTarget.style.borderColor = '#1B3A8C';
@@ -404,6 +405,7 @@ export default function ErpLogin() {
                           borderRadius: '8px',
                           color: '#0f172a',
                           outline: 'none',
+                          fontSize: '16px',
                         }}
                         onFocus={(e) => {
                           e.currentTarget.style.borderColor = '#1B3A8C';
@@ -553,6 +555,7 @@ export default function ErpLogin() {
                           borderRadius: '8px',
                           color: '#0f172a',
                           outline: 'none',
+                          fontSize: '16px',
                         }}
                         onFocus={(e) => {
                           e.currentTarget.style.borderColor = '#1B3A8C';
@@ -669,7 +672,7 @@ export default function ErpLogin() {
                       maxLength={8}
                       required
                       autoComplete="one-time-code"
-                      placeholder="123456"
+                      placeholder="12345678"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
                       className="w-full text-center text-2xl font-bold py-4 transition-all duration-200"
@@ -680,6 +683,7 @@ export default function ErpLogin() {
                         color: '#0f172a',
                         outline: 'none',
                         letterSpacing: '0.25em',
+                        fontSize: '24px',
                       }}
                       onFocus={(e) => {
                         e.currentTarget.style.borderColor = '#1B3A8C';
@@ -850,6 +854,7 @@ export default function ErpLogin() {
                               borderRadius: '8px',
                               color: '#0f172a',
                               outline: 'none',
+                              fontSize: '16px',
                             }}
                             onFocus={(e) => {
                               e.currentTarget.style.borderColor = '#1B3A8C';
@@ -918,6 +923,7 @@ export default function ErpLogin() {
                               borderRadius: '8px',
                               color: '#0f172a',
                               outline: 'none',
+                              fontSize: '16px',
                             }}
                             onFocus={(e) => {
                               e.currentTarget.style.borderColor = '#1B3A8C';

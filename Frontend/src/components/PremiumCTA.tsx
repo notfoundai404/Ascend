@@ -28,7 +28,7 @@ export const PremiumCTA: React.FC = () => {
   };
 
   return (
-    <section id="join" className="relative py-32 md:py-48 overflow-hidden">
+    <section id="join" className="relative py-24 sm:py-32 md:py-48 overflow-hidden">
       <div ref={containerRef} className="absolute inset-0">
         <motion.div
           className="absolute inset-0 bg-cover bg-center"
@@ -76,7 +76,7 @@ export const PremiumCTA: React.FC = () => {
         >
           <MagneticButton
             onClick={() => handleScrollTo('join')}
-            className="bg-[var(--color-rplay-green)] text-white font-bold text-sm md:text-base tracking-[0.2em] px-12 py-5 shadow-[0_0_40px_rgba(27,58,140,0.5)] hover:shadow-[0_0_60px_rgba(27,58,140,0.8)] font-sans uppercase"
+            className="bg-[var(--color-rplay-green)] text-white font-bold text-sm md:text-base tracking-[0.2em] px-8 sm:px-12 py-4 sm:py-5 shadow-[0_0_40px_rgba(27,58,140,0.5)] hover:shadow-[0_0_60px_rgba(27,58,140,0.8)] font-sans uppercase"
           >
             ENROLL NOW
           </MagneticButton>

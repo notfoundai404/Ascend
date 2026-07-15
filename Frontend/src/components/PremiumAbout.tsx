@@ -84,7 +84,7 @@ export const PremiumAbout: React.FC = () => {
             </motion.p>
 
             {/* Features */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
               {[
                 { title: 'Expert Coaching', desc: 'Former professional players' },
                 { title: 'Premium Facilities', desc: 'World-class training grounds' },
@@ -100,7 +100,7 @@ export const PremiumAbout: React.FC = () => {
                   viewport={{ once: true }}
                   transition={{ delay: 0.4 + idx * 0.1 }}
                 >
-                  <h3 className="font-condensed text-3xl text-white font-bold mb-2 tracking-wide uppercase">{feature.title}</h3>
+                  <h3 className="font-condensed text-2xl sm:text-3xl text-white font-bold mb-2 tracking-wide uppercase">{feature.title}</h3>
                   <p className="font-sans text-sm text-white/50">{feature.desc}</p>
                 </motion.div>
               ))}

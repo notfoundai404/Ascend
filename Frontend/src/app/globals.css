@@ -24,8 +24,14 @@
     margin: 0;
     overflow-x: hidden;
   }
+  /* Eliminate 300ms tap delay on iOS / Android */
+  a, button, select, input[type="checkbox"], input[type="radio"], label {
+    touch-action: manipulation;
+  }
   input, textarea, select {
     color: #0f172a !important; /* slate-900 */
+    /* Prevent iOS zoom on focus (ensure at least 16px in context) */
+    font-size: max(16px, 1em);
   }
   select option {
     color: #0f172a !important; /* slate-900 */

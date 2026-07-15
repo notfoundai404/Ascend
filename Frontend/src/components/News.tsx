@@ -123,13 +123,13 @@ export const News: React.FC = () => {
         <div className="relative flex items-center justify-center">
           <button
             onClick={handlePrev}
-            className="absolute left-[-20px] md:left-[-35px] z-20 bg-white border border-gray-200 hover:border-[var(--color-rplay-green)] text-gray-500 hover:text-[var(--color-rplay-green)] p-2.5 rounded-none transition-all duration-200 shadow-md focus:outline-none"
+            className="relative md:absolute md:left-[-35px] z-20 bg-white border border-gray-200 hover:border-[var(--color-rplay-green)] text-gray-500 hover:text-[var(--color-rplay-green)] p-2.5 rounded-none transition-all duration-200 shadow-md focus:outline-none flex-shrink-0"
             aria-label="Previous News"
           >
             <ChevronLeft size={20} />
           </button>
 
-          <div className="w-full overflow-hidden px-2 min-h-[300px]">
+          <div className="flex-1 overflow-hidden px-2 min-h-[300px]">
             {loadingNotices ? (
               <div className="flex items-center justify-center h-48 w-full text-gray-500 font-sans">
                 Loading notices...
@@ -195,7 +195,7 @@ export const News: React.FC = () => {
                       animate="center"
                       exit="exit"
                       transition={{ duration: 0.35, ease: 'easeInOut' }}
-                      className="w-full max-w-sm flex flex-col bg-white border border-gray-100 rounded-none overflow-hidden shadow-md h-full"
+                      className="w-full flex flex-col bg-white border border-gray-100 rounded-none overflow-hidden shadow-md h-full"
                     >
                       <div className="relative h-48 w-full overflow-hidden bg-gray-100 flex-shrink-0">
                         <img
@@ -224,7 +224,7 @@ export const News: React.FC = () => {
 
           <button
             onClick={handleNext}
-            className="absolute right-[-20px] md:right-[-35px] z-20 bg-white border border-gray-200 hover:border-[var(--color-rplay-green)] text-gray-500 hover:text-[var(--color-rplay-green)] p-2.5 rounded-none transition-all duration-200 shadow-md focus:outline-none"
+            className="relative md:absolute md:right-[-35px] z-20 bg-white border border-gray-200 hover:border-[var(--color-rplay-green)] text-gray-500 hover:text-[var(--color-rplay-green)] p-2.5 rounded-none transition-all duration-200 shadow-md focus:outline-none flex-shrink-0"
             aria-label="Next News"
           >
             <ChevronRight size={20} />
