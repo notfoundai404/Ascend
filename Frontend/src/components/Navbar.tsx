@@ -69,11 +69,11 @@ export const Navbar: React.FC = () => {
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-gray-200 h-16 md:h-20 flex items-center transform-gpu will-change-transform ${scrolled ? 'shadow-lg' : ''}`}
       >
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 flex items-center justify-between">
+        <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 md:px-12 flex items-center justify-between">
           {/* Logo */}
-          <a href="#home" onClick={(e) => handleLinkClick(e, 'home')} className="flex items-center">
+          <a href="#home" onClick={(e) => handleLinkClick(e, 'home')} className="flex items-center min-w-0 mr-2">
             <div className="md:hidden flex items-center">
-              <Logo iconSize={20} variant="light" singleLine />
+              <Logo iconSize={14} variant="light" singleLine />
             </div>
             <div className="hidden md:flex items-center">
               <Logo iconSize={36} variant="light" singleLine />
@@ -131,15 +131,23 @@ export const Navbar: React.FC = () => {
             </a>
           </div>
 
-          {/* Hamburger Menu - Mobile/Tablet */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-gray-800 hover:text-[var(--color-rplay-green)] transition-colors duration-200 p-2"
-          >
-            <span className="w-6 h-6 flex items-center justify-center">
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </span>
-          </button>
+          {/* Mobile Right Section (Login + Hamburger) */}
+          <div className="md:hidden flex items-center gap-1 sm:gap-3 flex-shrink-0">
+            <a
+              href="/login"
+              className="bg-[var(--color-rplay-green)] text-white font-semibold text-[9px] sm:text-xs tracking-widest px-2 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-opacity-95 transform active:scale-95 transition-all shadow-[0_0_10px_rgba(27,58,140,0.3)] font-sans whitespace-nowrap"
+            >
+              LOGIN
+            </a>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-800 hover:text-[var(--color-rplay-green)] transition-colors duration-200 p-1 flex-shrink-0"
+            >
+              <span className="w-6 h-6 flex items-center justify-center">
+                {isOpen ? <X size={24} /> : <Menu size={24} />}
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Scroll progress bar */}
@@ -189,12 +197,7 @@ export const Navbar: React.FC = () => {
             </a>
           </div>
 
-          <a
-            href="/login"
-            className="mt-6 bg-[var(--color-rplay-green)] text-white font-bold text-sm tracking-widest px-8 py-3 rounded hover:bg-opacity-95 font-sans"
-          >
-            LOGIN
-          </a>
+
         </div>
       </div>
     </>
