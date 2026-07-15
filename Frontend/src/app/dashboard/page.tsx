@@ -16,6 +16,8 @@ import {
   CalendarEvent, Coach, StudentReview, Feedback, Achievement
 } from '@/lib/dbService';
 
+type AttendanceEntry = { isPresent: boolean; notes: string };
+
 type Tab =
   | 'dashboard'
   | 'personal_detail'
@@ -57,12 +59,12 @@ export default function ErpDashboard() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [attendanceStats, setAttendanceStats] = useState<any>(null);
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
-  
+
   // Specific views
   const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null);
   const [coachDetails, setCoachDetails] = useState<Coach | null>(null);
   const [personalDetailsForm, setPersonalDetailsForm] = useState<any | null>(null);
-  
+
   // Forms & Modal states
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [payAmount, setPayAmount] = useState<number>(15000);
@@ -169,26 +171,26 @@ export default function ErpDashboard() {
     if (role === 'student') {
       if (tab === 'payment') {
         loadedTabsRef.current.add(tab);
-        dbService.getTransactions().then(setTransactions).catch(() => {});
+        dbService.getTransactions().then(setTransactions).catch(() => { });
       }
       if (tab === 'student_review') {
         loadedTabsRef.current.add(tab);
-        dbService.getReviews('me').then(setReviews).catch(() => {});
+        dbService.getReviews('me').then(setReviews).catch(() => { });
       }
       if (tab === 'feedback') {
         loadedTabsRef.current.add(tab);
-        dbService.getFeedback().then(setFeedbacks).catch(() => {});
+        dbService.getFeedback().then(setFeedbacks).catch(() => { });
       }
       if (tab === 'achievements') {
         loadedTabsRef.current.add(tab);
-        dbService.getAchievements().then(setAchievements).catch(() => {});
+        dbService.getAchievements().then(setAchievements).catch(() => { });
       }
       if (tab === 'attendance') {
         loadedTabsRef.current.add(tab);
         dbService.getMyAttendance().then((att) => {
           setAttendanceStats(att.stats);
           setAttendanceRecords(att.records);
-        }).catch(() => {});
+        }).catch(() => { });
       }
     }
   }, [activeTab, role]);
@@ -201,10 +203,10 @@ export default function ErpDashboard() {
 
     const refreshFn = () => {
       if (activeTab === 'coe') {
-        dbService.getEvents().then(setEvents).catch(() => {});
+        dbService.getEvents().then(setEvents).catch(() => { });
       }
       if (activeTab === 'notice_board') {
-        dbService.getNotices().then(setNotices).catch(() => {});
+        dbService.getNotices().then(setNotices).catch(() => { });
       }
     };
 
@@ -266,13 +268,25 @@ export default function ErpDashboard() {
         setNotices(data.noticesPreview ?? []);
         setEvents(data.eventsPreview ?? []);
         setCoaches(data.coaches ?? []);
-        // Attendance students for marking
-        setAttendanceStudents(data.todayAttendance?.records?.map((r: any) => ({
-          studentId: r.student?.id,
-          fullName: r.student?.fullName,
-          studentCode: r.student?.studentId,
-          attendance: { isPresent: r.isPresent, notes: r.notes },
-        })) ?? []);
+        // Attendance students for marking — use the full assigned-student list
+        // and overlay any already-marked records so students without a record today still appear.
+        {
+          const todayRecordsMap = new Map(
+            (data.todayAttendance?.records ?? []).map((r: any) => [r.student?.id, r])
+          );
+          const baseStudents: any[] = data.assignedStudents ?? [];
+          setAttendanceStudents(
+            baseStudents.map((s: any) => {
+              const rec = todayRecordsMap.get(s.id);
+              return {
+                studentId: s.id,
+                fullName: s.fullName,
+                studentDisplayId: s.studentId,
+                attendance: (rec ? { isPresent: (rec as any).isPresent, notes: (rec as any).notes } : { isPresent: false, notes: '' }) as AttendanceEntry,
+              };
+            })
+          );
+        }
 
       } else if (userRole === 'admin') {
         setNotices(data.noticesPreview ?? []);
@@ -284,12 +298,24 @@ export default function ErpDashboard() {
           studentName: tx.studentName || tx.student?.fullName,
         })));
         setFeedbacks(data.adminFeedbacks ?? []);
-        setAttendanceStudents(data.todayAttendance?.records?.map((r: any) => ({
-          studentId: r.student?.id,
-          fullName: r.student?.fullName,
-          studentCode: r.student?.studentId,
-          attendance: { isPresent: r.isPresent, notes: r.notes },
-        })) ?? []);
+        // Admin: build student list from allStudents and overlay today's attendance records
+        {
+          const todayRecordsMap = new Map<string, any>(
+            (data.todayAttendance?.records ?? []).map((r: any) => [r.student?.id, r])
+          );
+          const baseStudents: any[] = data.allStudents ?? [];
+          setAttendanceStudents(
+            baseStudents.map((s: any) => {
+              const rec = todayRecordsMap.get(s.id);
+              return {
+                studentId: s.id,
+                fullName: s.fullName,
+                studentDisplayId: s.studentId,
+                attendance: (rec ? { isPresent: rec.isPresent, notes: rec.notes } : { isPresent: false, notes: '' }) as AttendanceEntry,
+              };
+            })
+          );
+        }
         // Mark heavy tabs as loaded since admin gets full lists in dashboard
         loadedTabsRef.current.add('payment');
         loadedTabsRef.current.add('manage_accounts');
@@ -376,7 +402,7 @@ export default function ErpDashboard() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('erp_access_token')}` },
         body: formData
       });
-      
+
       showNotif('Profile updated successfully!');
       loadAllData('coach');
     } catch (err: any) {
@@ -776,7 +802,7 @@ export default function ErpDashboard() {
   const uniformFeesCharged = studentDetails?.uniformFees || 0;
   const totalPaid = studentDetails?.amountPaidTillDate || 0;
   const pendingFees = Math.max(0, totalFeesCharged + uniformFeesCharged - totalPaid);
-  
+
   // Calculate specific installment approvals
   const academyFeesPaid = transactions
     .filter(t => t.status === 'Approved' && t.type === 'academy_fees')
@@ -1185,7 +1211,7 @@ export default function ErpDashboard() {
 
                   <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Create Student / Coach Account</h3>
-                    
+
                     {/* Toggle */}
                     <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-60 mb-6 text-xs font-bold">
                       <button
@@ -1335,7 +1361,7 @@ export default function ErpDashboard() {
                                   title="Delete student"
                                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 disabled:opacity-60 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-colors"
                                 >
-                                  {loadingAction === `delete_student_${student.id}` ? <Loader2 size={12} className="animate-spin" /> : <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>}
+                                  {loadingAction === `delete_student_${student.id}` ? <Loader2 size={12} className="animate-spin" /> : <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></svg>}
                                   Delete
                                 </button>
                               </td>
@@ -1354,7 +1380,7 @@ export default function ErpDashboard() {
               {activeTab === 'assigned_students' && role === 'coach' && (
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
                   <h3 className="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Assigned Students</h3>
-                  
+
                   {/* Select Student for Skill Review */}
                   <div className="mb-6 flex gap-3 items-end">
                     <div>
@@ -1414,7 +1440,7 @@ export default function ErpDashboard() {
                   {role === 'student' ? (
                     <form onSubmit={handleUpdateStudentProfile} className="space-y-6">
                       <h4 className="text-lg font-bold text-slate-900 border-b pb-2">Student Profile Information</h4>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <div>
                           <span className="block text-[10px] font-bold text-slate-400 uppercase">Student ID</span>
@@ -1656,11 +1682,10 @@ export default function ErpDashboard() {
                           <div>
                             <div className="flex items-center gap-2">
                               <h5 className="text-sm font-bold text-slate-900">{event.title}</h5>
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                                event.category === 'match' ? 'bg-red-50 text-red-600' :
-                                event.category === 'holiday' ? 'bg-amber-50 text-amber-600' :
-                                event.category === 'fee_deadline' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-[#1B3A8C]'
-                              }`}>
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${event.category === 'match' ? 'bg-red-50 text-red-600' :
+                                  event.category === 'holiday' ? 'bg-amber-50 text-amber-600' :
+                                    event.category === 'fee_deadline' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-[#1B3A8C]'
+                                }`}>
                                 {event.category.replace('_', ' ')}
                               </span>
                             </div>
@@ -1714,10 +1739,9 @@ export default function ErpDashboard() {
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               />
                               {/* Category badge */}
-                              <span className={`absolute top-3 left-3 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-full ${
-                                notice.category === 'urgent' ? 'bg-red-500 text-white' :
-                                notice.category === 'event' ? 'bg-[#1B3A8C] text-white' : 'bg-slate-700 text-white'
-                              }`}>
+                              <span className={`absolute top-3 left-3 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-full ${notice.category === 'urgent' ? 'bg-red-500 text-white' :
+                                  notice.category === 'event' ? 'bg-[#1B3A8C] text-white' : 'bg-slate-700 text-white'
+                                }`}>
                                 {notice.category}
                               </span>
                             </div>
@@ -1750,10 +1774,9 @@ export default function ErpDashboard() {
                             </div>
 
                             {/* Bottom accent */}
-                            <div className={`h-[3px] w-0 group-hover:w-full transition-all duration-500 mt-auto ${
-                              notice.category === 'urgent' ? 'bg-red-500' :
-                              notice.category === 'event' ? 'bg-[#1B3A8C]' : 'bg-slate-400'
-                            }`} />
+                            <div className={`h-[3px] w-0 group-hover:w-full transition-all duration-500 mt-auto ${notice.category === 'urgent' ? 'bg-red-500' :
+                                notice.category === 'event' ? 'bg-[#1B3A8C]' : 'bg-slate-400'
+                              }`} />
                           </div>
                         ))}
                       </div>
@@ -1956,10 +1979,9 @@ export default function ErpDashboard() {
                               <td className="py-4 font-mono select-all">{tx.utrNumber || 'N/A'}</td>
                               <td className="py-4 font-bold text-[#1B3A8C]">₹{tx.amount.toLocaleString('en-IN')}</td>
                               <td className="py-4">
-                                <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${
-                                  tx.status === 'Approved' ? 'bg-green-50 text-green-600' :
-                                  tx.status === 'Rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
-                                }`}>
+                                <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${tx.status === 'Approved' ? 'bg-green-50 text-green-600' :
+                                    tx.status === 'Rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+                                  }`}>
                                   {tx.status}
                                 </span>
                               </td>
@@ -2008,7 +2030,7 @@ export default function ErpDashboard() {
                                 {coaches.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                               </select>
                               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
                               </div>
                             </div>
                           </div>
@@ -2017,7 +2039,7 @@ export default function ErpDashboard() {
                           <div>
                             <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Rating Score</label>
                             <div className="flex gap-1">
-                              {[1,2,3,4,5].map(star => (
+                              {[1, 2, 3, 4, 5].map(star => (
                                 <button
                                   key={star}
                                   type="button"
@@ -2117,11 +2139,10 @@ export default function ErpDashboard() {
                                 <button
                                   onClick={() => handleToggleTestimonial(fb.id, !fb.isTestimonial)}
                                   disabled={loadingAction === `testimonial_${fb.id}`}
-                                  className={`mt-3 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-60 ${
-                                    fb.isTestimonial
+                                  className={`mt-3 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-60 ${fb.isTestimonial
                                       ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
                                       : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
-                                  }`}
+                                    }`}
                                 >
                                   {loadingAction === `testimonial_${fb.id}` ? <Loader2 size={10} className="animate-spin" /> : <span>{fb.isTestimonial ? '✓' : '+'}</span>}
                                   {fb.isTestimonial ? 'Featured as Testimonial' : 'Feature as Testimonial'}
@@ -2196,9 +2217,8 @@ export default function ErpDashboard() {
                                 <span className="font-bold block text-slate-800">{new Date(rec.date).toLocaleDateString()}</span>
                                 <span className="text-[10px] text-slate-400 font-semibold">{rec.event?.title || 'General practice session'}</span>
                               </div>
-                              <span className={`font-bold px-3 py-1 rounded-xl uppercase text-[10px] tracking-wider ${
-                                rec.isPresent ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                              }`}>
+                              <span className={`font-bold px-3 py-1 rounded-xl uppercase text-[10px] tracking-wider ${rec.isPresent ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                                }`}>
                                 {rec.isPresent ? 'Present' : 'Absent'}
                               </span>
                             </div>
@@ -2277,11 +2297,10 @@ export default function ErpDashboard() {
                                 <td className="py-4 text-center">
                                   <button
                                     onClick={() => handleToggleStudentAttendance(s.studentId)}
-                                    className={`px-4 py-1.5 rounded-xl text-xs font-bold uppercase transition-all ${
-                                      s.attendance?.isPresent
+                                    className={`px-4 py-1.5 rounded-xl text-xs font-bold uppercase transition-all ${s.attendance?.isPresent
                                         ? 'bg-green-50 text-green-600 border border-green-200'
                                         : 'bg-red-50 text-red-600 border border-red-200'
-                                    }`}
+                                      }`}
                                   >
                                     {s.attendance?.isPresent ? 'Present' : 'Absent'}
                                   </button>
