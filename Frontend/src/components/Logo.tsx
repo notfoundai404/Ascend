@@ -13,7 +13,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', iconSize = 32, varia
   const headingColor = variant === 'dark' ? 'text-white' : 'text-[var(--color-rplay-green)]';
 
   return (
-    <div className={`inline-flex items-center gap-3 select-none ${className}`}>
+    <div className={`inline-flex flex-row flex-nowrap items-center gap-3 select-none ${className}`}>
       <img
         src="/AscendLogo.webp"
         alt="Ascend Cricket Academy"

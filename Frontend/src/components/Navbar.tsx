@@ -67,17 +67,21 @@ export const Navbar: React.FC = () => {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-gray-200 h-12 lg:h-20 flex items-center ${scrolled ? 'shadow-lg' : ''}`}
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-gray-200 h-12 md:h-20 flex items-center ${scrolled ? 'shadow-lg' : ''}`}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 flex items-center justify-between">
           {/* Logo */}
-          <a href="#home" onClick={(e) => handleLinkClick(e, 'home')}>
-            <Logo iconSize={24} variant="light" singleLine className="lg:hidden" />
-            <Logo iconSize={36} variant="light" singleLine className="hidden lg:block" />
+          <a href="#home" onClick={(e) => handleLinkClick(e, 'home')} className="flex items-center">
+            <div className="md:hidden flex items-center">
+              <Logo iconSize={24} variant="light" singleLine />
+            </div>
+            <div className="hidden md:flex items-center">
+              <Logo iconSize={36} variant="light" singleLine />
+            </div>
           </a>
 
           {/* Desktop nav links */}
-          <div className="hidden lg:flex items-center gap-8 font-sans text-sm font-semibold tracking-wider text-gray-800">
+          <div className="hidden md:flex items-center gap-4 lg:gap-8 font-sans text-sm font-semibold tracking-wider text-gray-800">
             {navLinks.map((link) => (
               <a
                 key={link.id}
@@ -99,7 +103,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Right Section - Socials & Button - Desktop */}
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4 lg:gap-6">
             <div className="flex items-center gap-4 text-gray-500">
               <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition-colors duration-200">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -130,7 +134,7 @@ export const Navbar: React.FC = () => {
           {/* Hamburger Menu - Mobile/Tablet */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden text-gray-800 hover:text-[var(--color-rplay-green)] transition-colors duration-200 p-2"
+            className="md:hidden text-gray-800 hover:text-[var(--color-rplay-green)] transition-colors duration-200 p-2"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -147,7 +151,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Drawer Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-white transition-all duration-300 lg:hidden flex flex-col justify-center items-center ${
+        className={`fixed inset-0 z-40 bg-white transition-all duration-300 md:hidden flex flex-col justify-center items-center ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
