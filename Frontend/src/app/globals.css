@@ -14,6 +14,10 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Reserve scrollbar lane permanently so it never causes layout shift
+       (prevents the navbar/hamburger from shifting during hero image transitions) */
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
   }
   body {
     background-color: var(--color-rplay-dark);

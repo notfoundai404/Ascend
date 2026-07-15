@@ -67,7 +67,7 @@ export const Navbar: React.FC = () => {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-gray-200 h-16 md:h-20 flex items-center transform-gpu ${scrolled ? 'shadow-lg' : ''}`}
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-gray-200 h-16 md:h-20 flex items-center transform-gpu will-change-transform ${scrolled ? 'shadow-lg' : ''}`}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 flex items-center justify-between">
           {/* Logo */}
