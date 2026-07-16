@@ -233,6 +233,11 @@ export default function ErpDashboard() {
           setAttendanceRecords(att.records);
         }).catch(() => { });
       }
+    } else if (role === 'admin') {
+      if (tab === 'payment') {
+        loadedTabsRef.current.add(tab);
+        dbService.getTransactions().then(setTransactions).catch(() => { });
+      }
     }
   }, [activeTab, role]);
 
@@ -359,13 +364,8 @@ export default function ErpDashboard() {
         setEvents(data.eventsPreview ?? []);
         setCoaches(data.coaches ?? []);
         setStudentsList(data.allStudents ?? []);
-        setTransactions((data.recentTransactions ?? []).map((tx: any) => ({
-          ...tx,
-          studentName: tx.studentName || tx.student?.fullName,
-        })));
         setFeedbacks(data.adminFeedbacks ?? []);
         // Mark heavy tabs as loaded since admin gets full lists in dashboard
-        loadedTabsRef.current.add('payment');
         loadedTabsRef.current.add('manage_accounts');
         loadedTabsRef.current.add('attendance');
       }
@@ -1370,7 +1370,6 @@ export default function ErpDashboard() {
                             <label className="block text-xs font-bold text-slate-600 mb-1">Max Installments</label>
                             <input
                               type="number"
-                              max={3}
                               min={1}
                               value={newAccInstallmentsLimit}
                               onChange={(e) => setNewAccInstallmentsLimit(parseInt(e.target.value) || 3)}

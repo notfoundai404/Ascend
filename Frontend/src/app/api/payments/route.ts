@@ -68,16 +68,10 @@ export const POST = apiHandler(
     const student = await prisma.student.findUnique({ where: { userId: user.userId } });
     if (!student) throw AppError.notFound('Student not found');
 
-    // Enforce installment limit
+    // Get existing count for installment numbering
     const existingCount = await prisma.transaction.count({
       where: { studentId: student.id, type, status: { not: 'Rejected' } },
     });
-
-    if (existingCount >= student.installmentsLimit) {
-      throw AppError.badRequest(
-        `Maximum installments (${student.installmentsLimit}) reached for ${type}`
-      );
-    }
 
     const instNum = installmentNumber ?? existingCount + 1;
 

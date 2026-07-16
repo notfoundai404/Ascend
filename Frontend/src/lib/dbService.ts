@@ -219,7 +219,7 @@ export const dbService = {
   async getTransactions(): Promise<Transaction[]> {
     const role = localStorage.getItem('erp_role');
     if (role === 'admin') {
-      const res = await fetchAPI('/payments');
+      const res = await fetchAPI('/payments?limit=1000');
       return res.data.transactions.map((tx: any) => ({
         ...tx,
         studentName: tx.student?.fullName,
