@@ -144,7 +144,7 @@ export default function ErpDashboard() {
 
   // Fetch attendance when date changes
   useEffect(() => {
-    if (!role || role === 'student' || !dashboardData) return;
+    if (!role || role === 'student') return;
     
     dbService.getTodayAttendance(attendanceDate).then(data => {
       const mapped = data.map((s: any) => ({
@@ -155,7 +155,7 @@ export default function ErpDashboard() {
       }));
       setAttendanceStudents(mapped);
     }).catch(console.error);
-  }, [attendanceDate, role, dashboardData]);
+  }, [attendanceDate, role]);
 
   // ── Initial load — single /api/dashboard call ────────────────
   useEffect(() => {
@@ -284,39 +284,45 @@ export default function ErpDashboard() {
         setEvents(data.eventsPreview ?? []);
         setCoaches(data.coaches ?? []);
         
-        // Initialize attendance students from dashboard data immediately
-        const attendanceMap = new Map();
-        data.todayAttendance?.records?.forEach((record: any) => {
-          attendanceMap.set(record.student.id, record);
-        });
-        const mappedStudents = data.assignedStudents?.map((s: any) => {
-          const attendance = attendanceMap.get(s.id);
-          return {
-            studentId: s.id,
-            studentDisplayId: s.studentId,
-            fullName: s.fullName,
-            attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
-          };
-        }) ?? [];
-        setAttendanceStudents(mappedStudents);
+        // Initialize attendance students from dashboard data only if selected date is today
+        const today = new Date().toISOString().split('T')[0];
+        if (attendanceDate === today) {
+          const attendanceMap = new Map();
+          data.todayAttendance?.records?.forEach((record: any) => {
+            attendanceMap.set(record.student.id, record);
+          });
+          const mappedStudents = data.assignedStudents?.map((s: any) => {
+            const attendance = attendanceMap.get(s.id);
+            return {
+              studentId: s.id,
+              studentDisplayId: s.studentId,
+              fullName: s.fullName,
+              attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
+            };
+          }) ?? [];
+          setAttendanceStudents(mappedStudents);
+        }
 
 
       } else if (userRole === 'admin') {
-        // Initialize attendance students from dashboard data immediately for admin too
-        const attendanceMap = new Map();
-        data.todayAttendance?.records?.forEach((record: any) => {
-          attendanceMap.set(record.student.id, record);
-        });
-        const mappedStudents = data.allStudents?.map((s: any) => {
-          const attendance = attendanceMap.get(s.id);
-          return {
-            studentId: s.id,
-            studentDisplayId: s.studentId,
-            fullName: s.fullName,
-            attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
-          };
-        }) ?? [];
-        setAttendanceStudents(mappedStudents);
+        // Initialize attendance students from dashboard data only if selected date is today
+        const today = new Date().toISOString().split('T')[0];
+        if (attendanceDate === today) {
+          const attendanceMap = new Map();
+          data.todayAttendance?.records?.forEach((record: any) => {
+            attendanceMap.set(record.student.id, record);
+          });
+          const mappedStudents = data.allStudents?.map((s: any) => {
+            const attendance = attendanceMap.get(s.id);
+            return {
+              studentId: s.id,
+              studentDisplayId: s.studentId,
+              fullName: s.fullName,
+              attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
+            };
+          }) ?? [];
+          setAttendanceStudents(mappedStudents);
+        }
         setNotices(data.noticesPreview ?? []);
         setEvents(data.eventsPreview ?? []);
         setCoaches(data.coaches ?? []);
