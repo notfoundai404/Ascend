@@ -284,44 +284,48 @@ export default function ErpDashboard() {
         setEvents(data.eventsPreview ?? []);
         setCoaches(data.coaches ?? []);
         
-        // Initialize attendance students from dashboard data only if selected date is today
-        const today = new Date().toISOString().split('T')[0];
-        if (attendanceDate === today) {
-          const attendanceMap = new Map();
-          data.todayAttendance?.records?.forEach((record: any) => {
-            attendanceMap.set(record.student.id, record);
-          });
-          const mappedStudents = data.assignedStudents?.map((s: any) => {
-            const attendance = attendanceMap.get(s.id);
-            return {
-              studentId: s.id,
-              studentDisplayId: s.studentId,
-              fullName: s.fullName,
-              attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
-            };
-          }) ?? [];
-          setAttendanceStudents(mappedStudents);
+        // Only initialize attendance students from dashboard data on initial load (when loading is true)
+        if (loading) {
+          const today = new Date().toISOString().split('T')[0];
+          if (attendanceDate === today) {
+            const attendanceMap = new Map();
+            data.todayAttendance?.records?.forEach((record: any) => {
+              attendanceMap.set(record.student.id, record);
+            });
+            const mappedStudents = data.assignedStudents?.map((s: any) => {
+              const attendance = attendanceMap.get(s.id);
+              return {
+                studentId: s.id,
+                studentDisplayId: s.studentId,
+                fullName: s.fullName,
+                attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
+              };
+            }) ?? [];
+            setAttendanceStudents(mappedStudents);
+          }
         }
 
 
       } else if (userRole === 'admin') {
-        // Initialize attendance students from dashboard data only if selected date is today
-        const today = new Date().toISOString().split('T')[0];
-        if (attendanceDate === today) {
-          const attendanceMap = new Map();
-          data.todayAttendance?.records?.forEach((record: any) => {
-            attendanceMap.set(record.student.id, record);
-          });
-          const mappedStudents = data.allStudents?.map((s: any) => {
-            const attendance = attendanceMap.get(s.id);
-            return {
-              studentId: s.id,
-              studentDisplayId: s.studentId,
-              fullName: s.fullName,
-              attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
-            };
-          }) ?? [];
-          setAttendanceStudents(mappedStudents);
+        // Only initialize attendance students from dashboard data on initial load (when loading is true)
+        if (loading) {
+          const today = new Date().toISOString().split('T')[0];
+          if (attendanceDate === today) {
+            const attendanceMap = new Map();
+            data.todayAttendance?.records?.forEach((record: any) => {
+              attendanceMap.set(record.student.id, record);
+            });
+            const mappedStudents = data.allStudents?.map((s: any) => {
+              const attendance = attendanceMap.get(s.id);
+              return {
+                studentId: s.id,
+                studentDisplayId: s.studentId,
+                fullName: s.fullName,
+                attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
+              };
+            }) ?? [];
+            setAttendanceStudents(mappedStudents);
+          }
         }
         setNotices(data.noticesPreview ?? []);
         setEvents(data.eventsPreview ?? []);
@@ -774,7 +778,19 @@ export default function ErpDashboard() {
 
       await dbService.markStudentAttendance(attendanceDate, records);
       showNotif('Attendance saved successfully!');
-      loadAllData(role!);
+      
+      // Refresh the attendance for the selected date specifically instead of calling loadAllData
+      const data = await dbService.getTodayAttendance(attendanceDate);
+      const mapped = data.map((s: any) => ({
+        studentId: s.studentId,
+        fullName: s.fullName,
+        studentDisplayId: s.studentDisplayId,
+        attendance: s.attendance ? { isPresent: s.attendance.isPresent, notes: s.attendance.notes } : { isPresent: false, notes: '' },
+      }));
+      setAttendanceStudents(mapped);
+      
+      // Still call loadAllData for other dashboard data but without overwriting our refreshed attendanceStudents
+      await loadAllData(role!);
     } catch (err: any) {
       showNotif(err.message || 'Failed to save attendance.', 'error');
     } finally {
