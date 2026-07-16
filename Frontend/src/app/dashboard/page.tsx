@@ -142,6 +142,21 @@ export default function ErpDashboard() {
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceStudents, setAttendanceStudents] = useState<any[]>([]);
 
+  // Fetch attendance when date changes
+  useEffect(() => {
+    if (!role || role === 'student' || !dashboardData) return;
+    
+    dbService.getTodayAttendance(attendanceDate).then(data => {
+      const mapped = data.map((s: any) => ({
+        studentId: s.studentId,
+        fullName: s.fullName,
+        studentDisplayId: s.studentDisplayId,
+        attendance: s.attendance ? { isPresent: s.attendance.isPresent, notes: s.attendance.notes } : { isPresent: false, notes: '' },
+      }));
+      setAttendanceStudents(mapped);
+    }).catch(console.error);
+  }, [attendanceDate, role, dashboardData]);
+
   // ── Initial load — single /api/dashboard call ────────────────
   useEffect(() => {
     const storedRole = localStorage.getItem('erp_role') as 'student' | 'admin' | 'coach' | null;
@@ -270,23 +285,8 @@ export default function ErpDashboard() {
         setCoaches(data.coaches ?? []);
         // Attendance students for marking — use the full assigned-student list
         // and overlay any already-marked records so students without a record today still appear.
-        {
-          const todayRecordsMap = new Map(
-            (data.todayAttendance?.records ?? []).map((r: any) => [r.student?.id, r])
-          );
-          const baseStudents: any[] = data.assignedStudents ?? [];
-          setAttendanceStudents(
-            baseStudents.map((s: any) => {
-              const rec = todayRecordsMap.get(s.id);
-              return {
-                studentId: s.id,
-                fullName: s.fullName,
-                studentDisplayId: s.studentId,
-                attendance: (rec ? { isPresent: (rec as any).isPresent, notes: (rec as any).notes } : { isPresent: false, notes: '' }) as AttendanceEntry,
-              };
-            })
-          );
-        }
+        // Attendance logic handled by useEffect now
+
 
       } else if (userRole === 'admin') {
         setNotices(data.noticesPreview ?? []);
@@ -298,24 +298,6 @@ export default function ErpDashboard() {
           studentName: tx.studentName || tx.student?.fullName,
         })));
         setFeedbacks(data.adminFeedbacks ?? []);
-        // Admin: build student list from allStudents and overlay today's attendance records
-        {
-          const todayRecordsMap = new Map<string, any>(
-            (data.todayAttendance?.records ?? []).map((r: any) => [r.student?.id, r])
-          );
-          const baseStudents: any[] = data.allStudents ?? [];
-          setAttendanceStudents(
-            baseStudents.map((s: any) => {
-              const rec = todayRecordsMap.get(s.id);
-              return {
-                studentId: s.id,
-                fullName: s.fullName,
-                studentDisplayId: s.studentId,
-                attendance: (rec ? { isPresent: rec.isPresent, notes: rec.notes } : { isPresent: false, notes: '' }) as AttendanceEntry,
-              };
-            })
-          );
-        }
         // Mark heavy tabs as loaded since admin gets full lists in dashboard
         loadedTabsRef.current.add('payment');
         loadedTabsRef.current.add('manage_accounts');

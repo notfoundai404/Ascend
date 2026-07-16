@@ -12,9 +12,9 @@ export const POST = apiHandler(
       throw AppError.badRequest('date and records are required');
     }
 
-    const parsedDate = new Date(date);
+    const [year, month, day] = date.split('-');
+    const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     parsedDate.setHours(0, 0, 0, 0);
-
     // Coach: verify all students are assigned to them
     if (user.role === 'COACH') {
       const coach = await prisma.coach.findUnique({ where: { userId: user.userId } });

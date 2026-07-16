@@ -383,8 +383,9 @@ export const dbService = {
   },
 
   // Attendance API
-  async getTodayAttendance(): Promise<any> {
-    const res = await fetchAPI('/attendance/today');
+  async getTodayAttendance(date?: string): Promise<any> {
+    const url = date ? `/attendance/today?date=${date}` : '/attendance/today';
+    const res = await fetchAPI(url);
     return res.data;
   },
 

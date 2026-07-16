@@ -6,11 +6,12 @@ import { prisma } from '@/lib/prisma';
 // GET /api/attendance/today
 export const GET = apiHandler(
   async (_req, { user }) => {
-    const today = new Date();
+    const { searchParams } = new URL(_req.url);
+    const dateQuery = searchParams.get('date');
+    const today = dateQuery ? new Date(parseInt(dateQuery.split('-')[0]), parseInt(dateQuery.split('-')[1]) - 1, parseInt(dateQuery.split('-')[2])) : new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
     if (user.role === 'COACH') {
       const coach = await prisma.coach.findUnique({ where: { userId: user.userId } });
       if (!coach) throw AppError.notFound('Coach not found');
