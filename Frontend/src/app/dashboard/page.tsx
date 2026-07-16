@@ -711,14 +711,21 @@ export default function ErpDashboard() {
     }
   };
 
-  // Mark student attendance (Coach/Admin)
+  // Mark student attendance (Coach / Admin)
   const handleToggleStudentAttendance = (studentId: string) => {
     setAttendanceStudents(prev =>
-      prev.map(s =>
-        s.studentId === studentId
-          ? { ...s, attendance: s.attendance ? { ...s.attendance, isPresent: !s.attendance.isPresent } : { isPresent: true } }
-          : s
-      )
+      prev.map(s => {
+        if (s.studentId !== studentId) return s;
+        // Get current value (default to false if no attendance)
+        const currentIsPresent = s.attendance?.isPresent ?? false;
+        return {
+          ...s,
+          attendance: {
+            ...(s.attendance || { notes: '' }),
+            isPresent: !currentIsPresent
+          }
+        };
+      })
     );
   };
 
