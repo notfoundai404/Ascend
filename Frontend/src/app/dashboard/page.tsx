@@ -100,6 +100,10 @@ export default function ErpDashboard() {
   const [newEventImageBase64, setNewEventImageBase64] = useState('');
   const [eventModalOpen, setEventModalOpen] = useState(false);
 
+  // Calendar state
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   // Feedback form
   const [fbCoach, setFbCoach] = useState('');
   const [fbRating, setFbRating] = useState(5);
@@ -1724,51 +1728,299 @@ export default function ErpDashboard() {
               {/* CALENDAR (COE) TAB */}
               {/* ========================================================================= */}
               {activeTab === 'coe' && (
-                <div className="space-y-6">
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                    <div className="flex items-center justify-between border-b pb-4 mb-6">
-                      <div>
-                        <h4 className="text-lg font-bold text-slate-900">Calendar of Events</h4>
-                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Academic calendar schedules</p>
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  className="space-y-8"
+                >
+                  <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/40">
+                    {/* Header */}
+                    <div className="px-8 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#0d2260] via-[#1B3A8C] to-[#2a56cc] opacity-100"></div>
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                      
+                      <div className="relative z-10">
+                        <h4 className="text-2xl font-black text-white tracking-tight">Calendar of Events</h4>
+                        <p className="text-blue-200/90 font-medium mt-1">Manage and track all academic schedules</p>
                       </div>
                       {(role === 'admin' || role === 'coach') && (
-                        <button
-                          onClick={() => setEventModalOpen(true)}
-                          className="bg-[#1B3A8C] hover:bg-blue-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl uppercase tracking-wider flex items-center gap-1.5"
-                        >
-                          <Plus size={14} /> Add Calendar Event
-                        </button>
+                        <div className="relative z-10">
+                          <button
+                            onClick={() => setEventModalOpen(true)}
+                            className="bg-white text-[#1B3A8C] hover:bg-blue-50 hover:scale-105 font-bold text-sm px-5 py-3 rounded-2xl flex items-center gap-2 transition-all shadow-lg"
+                          >
+                            <Plus size={18} /> New Event
+                          </button>
+                        </div>
                       )}
                     </div>
 
-                    <div className="space-y-4">
-                      {events.map((event) => (
-                        <div key={event.id} className="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0 last:pb-0">
-                          <div className="bg-blue-50 text-[#1B3A8C] p-2.5 rounded-xl border border-blue-100 flex flex-col items-center shrink-0 w-12 text-center font-sans">
-                            <span className="text-xs font-extrabold">{new Date(event.eventDate).getDate()}</span>
-                            <span className="text-[9px] font-bold uppercase">{new Date(event.eventDate).toLocaleString('default', { month: 'short' })}</span>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h5 className="text-sm font-bold text-slate-900">{event.title}</h5>
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${event.category === 'match' ? 'bg-red-50 text-red-600' :
-                                  event.category === 'holiday' ? 'bg-amber-50 text-amber-600' :
-                                    event.category === 'fee_deadline' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-[#1B3A8C]'
-                                }`}>
-                                {event.category.replace('_', ' ')}
-                              </span>
+                    <div className="p-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
+                      {/* Left: Calendar Grid */}
+                      <div className="lg:col-span-7 space-y-6">
+                        {/* Calendar Navigation */}
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-2xl font-extrabold text-slate-800">
+                            {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                          </h3>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setCurrentDate(new Date())}
+                              className="text-xs font-bold text-[#1B3A8C] px-4 py-2 rounded-xl bg-blue-50/80 hover:bg-blue-100 transition-colors"
+                            >
+                              Today
+                            </button>
+                            <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 p-1 rounded-xl">
+                              <button
+                                onClick={() => {
+                                  const newDate = new Date(currentDate);
+                                  newDate.setMonth(newDate.getMonth() - 1);
+                                  setCurrentDate(newDate);
+                                }}
+                                className="p-2 rounded-lg hover:bg-white hover:shadow-sm text-slate-500 transition-all"
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const newDate = new Date(currentDate);
+                                  newDate.setMonth(newDate.getMonth() + 1);
+                                  setCurrentDate(newDate);
+                                }}
+                                className="p-2 rounded-lg hover:bg-white hover:shadow-sm text-slate-500 transition-all"
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                              </button>
                             </div>
-                            <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">{event.description}</p>
-                            {event.imageUrl && (
-                              <img src={event.imageUrl} alt={event.title} className="mt-2 w-full max-h-40 object-cover rounded-xl border border-slate-100" />
-                            )}
                           </div>
                         </div>
-                      ))}
+
+                        {/* Calendar Body */}
+                        <div className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                          {/* Days Header */}
+                          <div className="grid grid-cols-7 mb-2">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                              <div key={day} className="text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider py-2">
+                                {day}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Calendar Days */}
+                          <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                            {(() => {
+                              const year = currentDate.getFullYear();
+                              const month = currentDate.getMonth();
+                              const firstDay = new Date(year, month, 1).getDay();
+                              const daysInMonth = new Date(year, month + 1, 0).getDate();
+                              const today = new Date();
+                              
+                              const days = [];
+                              
+                              for (let i = 0; i < firstDay; i++) {
+                                days.push(<div key={`empty-${i}`} className="aspect-square"></div>);
+                              }
+                              
+                              for (let day = 1; day <= daysInMonth; day++) {
+                                const date = new Date(year, month, day);
+                                const dateStr = date.toDateString();
+                                const dayEvents = events.filter(e => new Date(e.eventDate).toDateString() === dateStr);
+                                const isToday = today.toDateString() === dateStr;
+                                const isSelected = selectedDate.toDateString() === dateStr;
+                                
+                                days.push(
+                                  <motion.div
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    key={day}
+                                    onClick={() => setSelectedDate(date)}
+                                    className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all ${
+                                      isSelected ? 'bg-[#1B3A8C] shadow-lg shadow-blue-900/20' :
+                                      isToday ? 'bg-white border-2 border-[#1B3A8C]' :
+                                      'bg-white hover:bg-slate-100 border border-transparent hover:border-slate-200'
+                                    }`}
+                                  >
+                                    <span className={`text-sm font-bold ${isSelected ? 'text-white' : isToday ? 'text-[#1B3A8C]' : 'text-slate-700'}`}>
+                                      {day}
+                                    </span>
+                                    {dayEvents.length > 0 && (
+                                      <div className="absolute bottom-2 flex gap-0.5">
+                                        {dayEvents.slice(0, 3).map((e, idx) => (
+                                          <div 
+                                            key={idx} 
+                                            className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/80' : 
+                                              e.category === 'match' ? 'bg-red-400' :
+                                              e.category === 'holiday' ? 'bg-amber-400' :
+                                              e.category === 'fee_deadline' ? 'bg-purple-400' : 'bg-blue-400'
+                                            }`}
+                                          />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </motion.div>
+                                );
+                              }
+                              return days;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Events List */}
+                      <div className="lg:col-span-5 space-y-6">
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                          <h4 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                            <Calendar size={18} className="text-[#1B3A8C]" />
+                            {selectedDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                          </h4>
+                          <span className="bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-full">
+                            {events.filter(e => new Date(e.eventDate).toDateString() === selectedDate.toDateString()).length} Events
+                          </span>
+                        </div>
+                        
+                        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                          {(() => {
+                            const selectedDateStr = selectedDate.toDateString();
+                            const filteredEvents = events.filter(event => 
+                              new Date(event.eventDate).toDateString() === selectedDateStr
+                            ).sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+                            
+                            if (filteredEvents.length === 0) {
+                              return (
+                                <motion.div 
+                                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                  className="flex flex-col items-center justify-center py-16 text-center px-4 bg-slate-50/50 rounded-3xl border border-slate-100 border-dashed"
+                                >
+                                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                                    <Calendar size={24} className="text-slate-300" />
+                                  </div>
+                                  <h5 className="text-sm font-bold text-slate-700 mb-1">No Events Scheduled</h5>
+                                  <p className="text-xs text-slate-500">There are no events on this date.</p>
+                                </motion.div>
+                              );
+                            }
+                            
+                            return (
+                              <AnimatePresence>
+                                {filteredEvents.map((event, i) => (
+                                  <motion.div
+                                    key={event.id}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className="group relative overflow-hidden p-5 rounded-2xl bg-white border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/40 transition-all cursor-pointer"
+                                  >
+                                    {/* Category color indicator line */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                      event.category === 'match' ? 'bg-red-500' :
+                                      event.category === 'holiday' ? 'bg-amber-500' :
+                                      event.category === 'fee_deadline' ? 'bg-purple-500' : 'bg-blue-500'
+                                    }`} />
+                                    
+                                    <div className="flex items-start justify-between gap-4">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider ${
+                                            event.category === 'match' ? 'bg-red-50 text-red-600' :
+                                            event.category === 'holiday' ? 'bg-amber-50 text-amber-600' :
+                                            event.category === 'fee_deadline' ? 'bg-purple-50 text-purple-600' : 
+                                            'bg-blue-50 text-blue-600'
+                                          }`}>
+                                            {event.category.replace('_', ' ')}
+                                          </span>
+                                        </div>
+                                        <h5 className="text-base font-extrabold text-slate-900 leading-tight mb-2 group-hover:text-[#1B3A8C] transition-colors">{event.title}</h5>
+                                        {event.description && (
+                                          <p className="text-sm text-slate-500 font-medium leading-relaxed">{event.description}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {event.imageUrl && (
+                                      <div className="mt-4 overflow-hidden rounded-xl">
+                                        <img 
+                                          src={event.imageUrl} 
+                                          alt={event.title} 
+                                          className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                      </div>
+                                    )}
+                                  </motion.div>
+                                ))}
+                              </AnimatePresence>
+                            );
+                          })()}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                  
+                  {/* All Upcoming Events Section */}
+                  <div className="pt-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <h4 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                        <Clock size={20} className="text-[#1B3A8C]" />
+                        Upcoming Activities
+                      </h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {events
+                        .filter(event => new Date(event.eventDate) >= new Date(new Date().setHours(0, 0, 0, 0)))
+                        .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
+                        .slice(0, 6)
+                        .map((event, idx) => (
+                          <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="flex flex-col bg-white p-5 rounded-3xl border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 hover:border-blue-100 transition-all group"
+                          >
+                            <div className="flex items-start gap-4 mb-4">
+                              <div 
+                                className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl shrink-0"
+                                style={{
+                                  background: event.category === 'match' ? 'linear-gradient(135deg, #fef2f2, #fee2e2)' :
+                                    event.category === 'holiday' ? 'linear-gradient(135deg, #fffbeb, #fef3c7)' :
+                                    event.category === 'fee_deadline' ? 'linear-gradient(135deg, #faf5ff, #f3e8ff)' : 
+                                    'linear-gradient(135deg, #eff6ff, #dbeafe)',
+                                }}
+                              >
+                                <span className="text-xl font-black" style={{
+                                  color: event.category === 'match' ? '#dc2626' :
+                                    event.category === 'holiday' ? '#d97706' :
+                                    event.category === 'fee_deadline' ? '#9333ea' : '#1B3A8C'
+                                }}>
+                                  {new Date(event.eventDate).getDate()}
+                                </span>
+                                <span className="text-[10px] font-bold uppercase text-slate-500">
+                                  {new Date(event.eventDate).toLocaleString('default', { month: 'short' })}
+                                </span>
+                              </div>
+                              <div className="flex-1 pt-1">
+                                <span className={`inline-block text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider mb-1.5 ${
+                                  event.category === 'match' ? 'bg-red-50 text-red-600' :
+                                  event.category === 'holiday' ? 'bg-amber-50 text-amber-600' :
+                                  event.category === 'fee_deadline' ? 'bg-purple-50 text-purple-600' : 
+                                  'bg-blue-50 text-blue-600'
+                                }`}>
+                                  {event.category.replace('_', ' ')}
+                                </span>
+                                <h5 className="text-sm font-bold text-slate-800 group-hover:text-[#1B3A8C] transition-colors line-clamp-1">
+                                  {event.title}
+                                </h5>
+                              </div>
+                            </div>
+                            {event.description && (
+                              <p className="text-xs text-slate-500 font-medium line-clamp-2 mt-auto">{event.description}</p>
+                            )}
+                          </motion.div>
+                        ))}
+                    </div>
+                  </div>
+                </motion.div>
               )}
+
 
               {/* ========================================================================= */}
               {/* NOTICE BOARD TAB */}
