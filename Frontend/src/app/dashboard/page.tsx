@@ -283,12 +283,40 @@ export default function ErpDashboard() {
         setNotices(data.noticesPreview ?? []);
         setEvents(data.eventsPreview ?? []);
         setCoaches(data.coaches ?? []);
-        // Attendance students for marking — use the full assigned-student list
-        // and overlay any already-marked records so students without a record today still appear.
-        // Attendance logic handled by useEffect now
+        
+        // Initialize attendance students from dashboard data immediately
+        const attendanceMap = new Map();
+        data.todayAttendance?.records?.forEach((record: any) => {
+          attendanceMap.set(record.student.id, record);
+        });
+        const mappedStudents = data.assignedStudents?.map((s: any) => {
+          const attendance = attendanceMap.get(s.id);
+          return {
+            studentId: s.id,
+            studentDisplayId: s.studentId,
+            fullName: s.fullName,
+            attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
+          };
+        }) ?? [];
+        setAttendanceStudents(mappedStudents);
 
 
       } else if (userRole === 'admin') {
+        // Initialize attendance students from dashboard data immediately for admin too
+        const attendanceMap = new Map();
+        data.todayAttendance?.records?.forEach((record: any) => {
+          attendanceMap.set(record.student.id, record);
+        });
+        const mappedStudents = data.allStudents?.map((s: any) => {
+          const attendance = attendanceMap.get(s.id);
+          return {
+            studentId: s.id,
+            studentDisplayId: s.studentId,
+            fullName: s.fullName,
+            attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
+          };
+        }) ?? [];
+        setAttendanceStudents(mappedStudents);
         setNotices(data.noticesPreview ?? []);
         setEvents(data.eventsPreview ?? []);
         setCoaches(data.coaches ?? []);
