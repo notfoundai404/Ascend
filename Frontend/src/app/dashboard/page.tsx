@@ -17,6 +17,12 @@ import {
 } from '@/lib/dbService';
 
 type AttendanceEntry = { isPresent: boolean; notes: string };
+type AttendanceStudent = {
+  studentId: string;
+  fullName: string;
+  studentDisplayId: string;
+  attendance: AttendanceEntry;
+};
 
 type Tab =
   | 'dashboard'
@@ -138,26 +144,35 @@ export default function ErpDashboard() {
   const [newAccInstallmentsLimit, setNewAccInstallmentsLimit] = useState(3);
   const [createdCredentialsAlert, setCreatedCredentialsAlert] = useState<any>(null);
 
-  // Attendance Marking
+  // Attendance Marking (cache per date)
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [attendanceStudents, setAttendanceStudents] = useState<any[]>([]);
+  const [attendanceCache, setAttendanceCache] = useState<Record<string, AttendanceStudent[]>>({});
+  const attendanceStudents = attendanceCache[attendanceDate] ?? [];
   const [attendanceLoading, setAttendanceLoading] = useState(false);
 
-  // Fetch attendance when date changes
+  // Fetch attendance when date changes (only if not already in cache)
   useEffect(() => {
     if (!role || role === 'student') return;
+    
+    // If we already have this date in cache (check using 'in' operator), don't fetch again
+    if (attendanceDate in attendanceCache) {
+      return;
+    }
     
     const fetchAttendance = async () => {
       setAttendanceLoading(true);
       try {
         const data = await dbService.getTodayAttendance(attendanceDate);
-        const mapped = data.map((s: any) => ({
+        const mapped = data.map((s: any): AttendanceStudent => ({
           studentId: s.studentId,
           fullName: s.fullName,
           studentDisplayId: s.studentDisplayId,
           attendance: s.attendance ? { isPresent: s.attendance.isPresent, notes: s.attendance.notes } : { isPresent: false, notes: '' },
         }));
-        setAttendanceStudents(mapped);
+        setAttendanceCache(prev => ({
+          ...prev,
+          [attendanceDate]: mapped
+        }));
       } catch (err) {
         console.error(err);
       } finally {
@@ -166,7 +181,7 @@ export default function ErpDashboard() {
     };
     
     fetchAttendance();
-  }, [attendanceDate, role]);
+  }, [attendanceDate, role, attendanceCache]);
 
   // ── Initial load — single /api/dashboard call ────────────────
   useEffect(() => {
@@ -295,48 +310,50 @@ export default function ErpDashboard() {
         setEvents(data.eventsPreview ?? []);
         setCoaches(data.coaches ?? []);
         
-        // Only initialize attendance students from dashboard data on initial load (when loading is true)
+        // Only initialize attendance cache for today from dashboard data on initial load
         if (loading) {
           const today = new Date().toISOString().split('T')[0];
-          if (attendanceDate === today) {
-            const attendanceMap = new Map();
-            data.todayAttendance?.records?.forEach((record: any) => {
-              attendanceMap.set(record.student.id, record);
-            });
-            const mappedStudents = data.assignedStudents?.map((s: any) => {
-              const attendance = attendanceMap.get(s.id);
-              return {
-                studentId: s.id,
-                studentDisplayId: s.studentId,
-                fullName: s.fullName,
-                attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
-              };
-            }) ?? [];
-            setAttendanceStudents(mappedStudents);
-          }
+          const attendanceMap = new Map();
+          data.todayAttendance?.records?.forEach((record: any) => {
+            attendanceMap.set(record.student.id, record);
+          });
+          const mappedStudents = data.assignedStudents?.map((s: any) => {
+            const attendance = attendanceMap.get(s.id);
+            return {
+              studentId: s.id,
+              studentDisplayId: s.studentId,
+              fullName: s.fullName,
+              attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
+            };
+          }) ?? [];
+          setAttendanceCache(prev => ({
+            ...prev,
+            [today]: mappedStudents
+          }));
         }
 
 
       } else if (userRole === 'admin') {
-        // Only initialize attendance students from dashboard data on initial load (when loading is true)
+        // Only initialize attendance cache for today from dashboard data on initial load
         if (loading) {
           const today = new Date().toISOString().split('T')[0];
-          if (attendanceDate === today) {
-            const attendanceMap = new Map();
-            data.todayAttendance?.records?.forEach((record: any) => {
-              attendanceMap.set(record.student.id, record);
-            });
-            const mappedStudents = data.allStudents?.map((s: any) => {
-              const attendance = attendanceMap.get(s.id);
-              return {
-                studentId: s.id,
-                studentDisplayId: s.studentId,
-                fullName: s.fullName,
-                attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
-              };
-            }) ?? [];
-            setAttendanceStudents(mappedStudents);
-          }
+          const attendanceMap = new Map();
+          data.todayAttendance?.records?.forEach((record: any) => {
+            attendanceMap.set(record.student.id, record);
+          });
+          const mappedStudents = data.allStudents?.map((s: any) => {
+            const attendance = attendanceMap.get(s.id);
+            return {
+              studentId: s.id,
+              studentDisplayId: s.studentId,
+              fullName: s.fullName,
+              attendance: attendance ? { isPresent: attendance.isPresent, notes: attendance.notes } : { isPresent: false, notes: '' },
+            };
+          }) ?? [];
+          setAttendanceCache(prev => ({
+            ...prev,
+            [today]: mappedStudents
+          }));
         }
         setNotices(data.noticesPreview ?? []);
         setEvents(data.eventsPreview ?? []);
@@ -762,8 +779,9 @@ export default function ErpDashboard() {
 
   // Mark student attendance (Coach / Admin)
   const handleToggleStudentAttendance = (studentId: string) => {
-    setAttendanceStudents(prev =>
-      prev.map(s => {
+    setAttendanceCache(prev => ({
+      ...prev,
+      [attendanceDate]: (prev[attendanceDate] || []).map(s => {
         if (s.studentId !== studentId) return s;
         // Get current value (default to false if no attendance)
         const currentIsPresent = s.attendance?.isPresent ?? false;
@@ -775,7 +793,7 @@ export default function ErpDashboard() {
           }
         };
       })
-    );
+    }));
   };
 
   const handleSaveStudentAttendance = async () => {
@@ -790,7 +808,7 @@ export default function ErpDashboard() {
       await dbService.markStudentAttendance(attendanceDate, records);
       showNotif('Attendance saved successfully!');
       
-      // Refresh the attendance for the selected date specifically
+      // Refresh the attendance for the selected date specifically and update cache
       setAttendanceLoading(true);
       const data = await dbService.getTodayAttendance(attendanceDate);
       const mapped = data.map((s: any) => ({
@@ -799,7 +817,10 @@ export default function ErpDashboard() {
         studentDisplayId: s.studentDisplayId,
         attendance: s.attendance ? { isPresent: s.attendance.isPresent, notes: s.attendance.notes } : { isPresent: false, notes: '' },
       }));
-      setAttendanceStudents(mapped);
+      setAttendanceCache(prev => ({
+        ...prev,
+        [attendanceDate]: mapped
+      }));
     } catch (err: any) {
       showNotif(err.message || 'Failed to save attendance.', 'error');
     } finally {
