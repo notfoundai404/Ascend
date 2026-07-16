@@ -8,10 +8,17 @@ export const GET = apiHandler(
   async (_req, { user }) => {
     const { searchParams } = new URL(_req.url);
     const dateQuery = searchParams.get('date');
-    const today = dateQuery ? new Date(parseInt(dateQuery.split('-')[0]), parseInt(dateQuery.split('-')[1]) - 1, parseInt(dateQuery.split('-')[2])) : new Date();
-    today.setHours(0, 0, 0, 0);
+    let today: Date;
+    if (dateQuery) {
+      const [year, month, day] = dateQuery.split('-');
+      today = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+    } else {
+      // For "today", we need to get current date in local timezone, then convert to UTC midnight
+      const now = new Date();
+      today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    }
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
     if (user.role === 'COACH') {
       const coach = await prisma.coach.findUnique({ where: { userId: user.userId } });
       if (!coach) throw AppError.notFound('Coach not found');

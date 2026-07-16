@@ -9,10 +9,11 @@ import { prisma } from '@/lib/prisma';
 // on-demand through their individual paginated endpoints.
 export const GET = apiHandler(
   async (_req, { user }) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date in local timezone, then convert to UTC midnight
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
     // ── STUDENT ──────────────────────────────────────────────
     if (user.role === 'STUDENT') {

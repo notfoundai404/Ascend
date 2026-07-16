@@ -12,8 +12,8 @@ export const POST = apiHandler(
       throw AppError.badRequest('date, coachId, and isPresent are required');
     }
 
-    const parsedDate = new Date(date);
-    parsedDate.setHours(0, 0, 0, 0);
+    const [year, month, day] = date.split('-');
+    const parsedDate = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
 
     const coach = await prisma.coach.findUnique({ where: { id: coachId } });
     if (!coach) throw AppError.notFound('Coach not found');
