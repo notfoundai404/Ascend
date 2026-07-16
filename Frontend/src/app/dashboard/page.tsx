@@ -141,20 +141,31 @@ export default function ErpDashboard() {
   // Attendance Marking
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceStudents, setAttendanceStudents] = useState<any[]>([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
 
   // Fetch attendance when date changes
   useEffect(() => {
     if (!role || role === 'student') return;
     
-    dbService.getTodayAttendance(attendanceDate).then(data => {
-      const mapped = data.map((s: any) => ({
-        studentId: s.studentId,
-        fullName: s.fullName,
-        studentDisplayId: s.studentDisplayId,
-        attendance: s.attendance ? { isPresent: s.attendance.isPresent, notes: s.attendance.notes } : { isPresent: false, notes: '' },
-      }));
-      setAttendanceStudents(mapped);
-    }).catch(console.error);
+    const fetchAttendance = async () => {
+      setAttendanceLoading(true);
+      try {
+        const data = await dbService.getTodayAttendance(attendanceDate);
+        const mapped = data.map((s: any) => ({
+          studentId: s.studentId,
+          fullName: s.fullName,
+          studentDisplayId: s.studentDisplayId,
+          attendance: s.attendance ? { isPresent: s.attendance.isPresent, notes: s.attendance.notes } : { isPresent: false, notes: '' },
+        }));
+        setAttendanceStudents(mapped);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setAttendanceLoading(false);
+      }
+    };
+    
+    fetchAttendance();
   }, [attendanceDate, role]);
 
   // ── Initial load — single /api/dashboard call ────────────────
@@ -779,7 +790,8 @@ export default function ErpDashboard() {
       await dbService.markStudentAttendance(attendanceDate, records);
       showNotif('Attendance saved successfully!');
       
-      // Refresh the attendance for the selected date specifically instead of calling loadAllData
+      // Refresh the attendance for the selected date specifically
+      setAttendanceLoading(true);
       const data = await dbService.getTodayAttendance(attendanceDate);
       const mapped = data.map((s: any) => ({
         studentId: s.studentId,
@@ -788,13 +800,11 @@ export default function ErpDashboard() {
         attendance: s.attendance ? { isPresent: s.attendance.isPresent, notes: s.attendance.notes } : { isPresent: false, notes: '' },
       }));
       setAttendanceStudents(mapped);
-      
-      // Still call loadAllData for other dashboard data but without overwriting our refreshed attendanceStudents
-      await loadAllData(role!);
     } catch (err: any) {
       showNotif(err.message || 'Failed to save attendance.', 'error');
     } finally {
       setLoadingAction(null);
+      setAttendanceLoading(false);
     }
   };
 
@@ -2320,34 +2330,41 @@ export default function ErpDashboard() {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs font-sans">
-                          <thead>
-                            <tr className="border-b font-bold text-slate-400 uppercase tracking-wider">
-                              <th className="pb-3">Student Name</th>
-                              <th className="pb-3">Display ID</th>
-                              <th className="pb-3 text-center">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                            {attendanceStudents.map((s: any) => (
-                              <tr key={s.studentId} className="hover:bg-slate-50/50">
-                                <td className="py-4 font-bold text-slate-900">{s.fullName}</td>
-                                <td className="py-4 font-mono text-slate-500 uppercase">{s.studentDisplayId}</td>
-                                <td className="py-4 text-center">
-                                  <button
-                                    onClick={() => handleToggleStudentAttendance(s.studentId)}
-                                    className={`px-4 py-1.5 rounded-xl text-xs font-bold uppercase transition-all ${s.attendance?.isPresent
-                                        ? 'bg-green-50 text-green-600 border border-green-200'
-                                        : 'bg-red-50 text-red-600 border border-red-200'
-                                      }`}
-                                  >
-                                    {s.attendance?.isPresent ? 'Present' : 'Absent'}
-                                  </button>
-                                </td>
+                        {attendanceLoading ? (
+                          <div className="flex items-center justify-center py-10">
+                            <Loader2 size={32} className="animate-spin text-[#1B3A8C]" />
+                            <span className="ml-3 text-sm font-semibold text-slate-600">Loading attendance...</span>
+                          </div>
+                        ) : (
+                          <table className="w-full text-left text-xs font-sans">
+                            <thead>
+                              <tr className="border-b font-bold text-slate-400 uppercase tracking-wider">
+                                <th className="pb-3">Student Name</th>
+                                <th className="pb-3">Display ID</th>
+                                <th className="pb-3 text-center">Status</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                              {attendanceStudents.map((s: any) => (
+                                <tr key={s.studentId} className="hover:bg-slate-50/50">
+                                  <td className="py-4 font-bold text-slate-900">{s.fullName}</td>
+                                  <td className="py-4 font-mono text-slate-500 uppercase">{s.studentDisplayId}</td>
+                                  <td className="py-4 text-center">
+                                    <button
+                                      onClick={() => handleToggleStudentAttendance(s.studentId)}
+                                      className={`px-4 py-1.5 rounded-xl text-xs font-bold uppercase transition-all ${s.attendance?.isPresent
+                                          ? 'bg-green-50 text-green-600 border border-green-200'
+                                          : 'bg-red-50 text-red-600 border border-red-200'
+                                        }`}
+                                    >
+                                      {s.attendance?.isPresent ? 'Present' : 'Absent'}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
                       </div>
                     </div>
                   )}
